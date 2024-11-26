@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  name        String       @unique
+  blocks      Block[]
+  transitions Transition[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Block {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  type        String
+  attributes  Json
+  transitions Transition[]
+  project     Project      @relation(fields: [projectId], references: [id])
+  projectId   String       @db.ObjectId
+}
+
+model Transition {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  fromBlockId String   @db.ObjectId
+  toBlockId   String   @db.ObjectId
+  condition   Json
+  block       Block    @relation(fields: [fromBlockId], references: [id])
+  project     Project? @relation(fields: [projectId], references: [id])
+  projectId   String?  @db.ObjectId
+}
