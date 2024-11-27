@@ -40,7 +40,6 @@ async function saveConfiguration(req: Request, res: Response) {
         },
       },
       create: {
-        id: new ObjectId().toString(),
         name: requestBody.name,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -75,7 +74,7 @@ async function saveConfiguration(req: Request, res: Response) {
 
 async function getConfiguration(req: Request, res: Response) {
   try {
-    const project = await prisma.project.findFirst({
+    const project = await prisma.project.findMany({
       where: {
         name: req.body.name,
       },
@@ -186,6 +185,14 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Closing HTTP server and Prisma Client...');
+  await prisma.$disconnect();
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
+process.on('SIGINT', async () => {
+  console.log('SIGINT received. Closing HTTP server and Prisma Client...');
   await prisma.$disconnect();
   server.close(() => {
     console.log('HTTP server closed');
