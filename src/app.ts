@@ -1,9 +1,17 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import express, {
+  Request,
+  Response,
+  NextFunction,
+  ErrorRequestHandler,
+} from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import configurationRoute from './routes/configurationRoute';
-import { prismaErrorHandler, serverErrorHandler } from './services/errorHandler';
+import {
+  prismaErrorHandler,
+  serverErrorHandler,
+} from './services/errorHandler';
 import { shutdownServer } from './services/shutDownServer';
 
 // Initialize
