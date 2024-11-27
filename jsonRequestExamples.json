@@ -1,0 +1,44 @@
+{
+    "GET": {
+        "url": "localhost:3000/api/get-config"
+    },
+
+    "SAVE": {
+        "url": "localhost:3000/api/save-config",
+        "body": {
+            "name": "Test Bot 2",
+            "blocks": [
+                {
+                    "id": "211111111111111111111111",
+                    "type": "message",
+                    "attributes": {
+                        "text": "Привет! Как дела?"
+                    }
+                },
+                {
+                    "id": "122222222222222222222222",
+                    "type": "message",
+                    "attributes": {
+                        "text": "Пока"
+                    }
+                }
+            ],
+            "transitions": [
+                {
+                    "fromBlockId": "211111111111111111111111",
+                    "toBlockId": "122222222222222222222222",
+                    "condition": {
+                        "type": "always"
+                    }
+                }
+            ]
+        }
+    },
+
+    "DELETE": {
+        "url": "localhost:3000/api/delete-config",
+        "body": {
+            "name": "Test Bot 2"
+        }
+    }
+}
