@@ -20,7 +20,7 @@ model Block {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
   type        String
   attributes  Json
-  transitions Transition[]
+  transitions Transition[] @relation("BlockToTransition")
   project     Project      @relation(fields: [projectId], references: [id])
   projectId   String       @db.ObjectId
 }
@@ -30,7 +30,7 @@ model Transition {
   fromBlockId String   @db.ObjectId
   toBlockId   String   @db.ObjectId
   condition   Json
-  block       Block    @relation(fields: [fromBlockId], references: [id])
-  project     Project? @relation(fields: [projectId], references: [id])
-  projectId   String?  @db.ObjectId
+  block       Block    @relation("BlockToTransition", fields: [fromBlockId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id])
+  projectId   String   @db.ObjectId
 }

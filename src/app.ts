@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { ObjectId } from 'mongodb';
 
 // Инициализация
 dotenv.config();
@@ -15,25 +16,23 @@ app.use(cors());
 // Контроллеры
 async function saveConfiguration(req: Request, res: Response) {
   try {
-    const { name, blocks, transitions } = req.body;
+    const requestBody = req.body;
 
-    // Создаем или обновляем проект
-    const project = await prisma.project.upsert({
-      where: {
-        name: name,
-      },
+    const updatedProject = await prisma.project.upsert({
+      where: { name: requestBody.name },
       update: {
-        name,
+        // updatedAt: new Date(),
         blocks: {
-          deleteMany: {}, // Удаляем старые блоки
-          create: blocks.map((block: any) => ({
+          deleteMany: {},
+          create: requestBody.blocks.map((block: any) => ({
+            id: block.id,
             type: block.type,
             attributes: block.attributes,
           })),
         },
         transitions: {
-          deleteMany: {}, // Удаляем старые переходы
-          create: transitions.map((transition: any) => ({
+          deleteMany: {},
+          create: requestBody.transitions.map((transition: any) => ({
             fromBlockId: transition.fromBlockId,
             toBlockId: transition.toBlockId,
             condition: transition.condition,
@@ -41,34 +40,29 @@ async function saveConfiguration(req: Request, res: Response) {
         },
       },
       create: {
-        name,
+        id: new ObjectId().toString(),
+        name: requestBody.name,
+        createdAt: new Date(),
+        updatedAt: new Date(),
         blocks: {
-          create: blocks.map((block: any) => ({
+          create: requestBody.blocks.map((block: any) => ({
+            id: block.id,
             type: block.type,
             attributes: block.attributes,
           })),
         },
-      },
-      include: {
-        blocks: true,
+        transitions: {
+          create: requestBody.transitions.map((transition: any) => ({
+            fromBlockId: transition.fromBlockId,
+            toBlockId: transition.toBlockId,
+            condition: transition.condition,
+          })),
+        },
       },
     });
-
-    const blockIds = project.blocks.map(block => block.id);
-
-    if (transitions && transitions.length > 0) {
-      await prisma.transition.createMany({
-        data: transitions.map((transition: any) => ({
-          fromBlockId: blockIds[parseInt(transition.fromBlockId) - 1],
-          toBlockId: blockIds[parseInt(transition.toBlockId) - 1],
-          condition: transition.condition,
-        })),
-      });
-    }
-
     res.status(200).json({
       message: 'Project configuration saved successfully',
-      data: project,
+      data: updatedProject,
     });
   } catch (error) {
     console.error('Error saving project configuration:', error);
@@ -86,12 +80,9 @@ async function getConfiguration(req: Request, res: Response) {
         name: req.body.name,
       },
       include: {
-        blocks: {
-          include: {
-            transitions: true,
-          },
-        },
-      }
+        blocks: true,
+        transitions: true,
+      },
     });
 
     if (!project) {
@@ -113,10 +104,44 @@ async function getConfiguration(req: Request, res: Response) {
   }
 }
 
+async function deleteConfiguration(req: Request, res: Response) {
+  try {
+    const project = await prisma.project.findFirst({
+      where: {
+        name: req.body.name,
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        message: 'Project not found',
+      });
+    }
+
+    const deletedProject = await prisma.$transaction([
+      prisma.transition.deleteMany({ where: { projectId: project.id } }),
+      prisma.block.deleteMany({ where: { projectId: project.id } }),
+      prisma.project.delete({ where: { id: project.id } }),
+    ]);
+
+    res.status(200).json({ 
+      message: "Project and related data deleted successfully", 
+      data: deletedProject
+    });
+  } catch (error) {
+    console.error('Error deleting project configuration:', error);
+    res.status(500).json({
+      message: 'Failed to delete project configuration',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
+
 // Routes
 const router = express.Router();
 router.post("/save-config", saveConfiguration);
 router.get("/get-config", getConfiguration);
+router.delete("/delete-config", deleteConfiguration);
 
 // Подключаем маршруты к приложению
 app.use('/api', router);
