@@ -62,6 +62,34 @@ export async function saveConfiguration(req: Request, res: Response) {
   }
 }
 
+export async function getAllConfigurations(req: Request, res: Response) {
+  try {
+    const project = await prisma.project.findMany({
+      include: {
+        blocks: true,
+        transitions: true,
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        message: 'Project not found',
+      });
+    }
+
+    res.status(200).json({
+      message: 'Project configuration retrieved successfully',
+      data: project,
+    });
+  } catch (error) {
+    console.error('Error retrieving project configuration:', error);
+    res.status(500).json({
+      message: 'Failed to retrieve project configuration',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
+
 export async function getConfiguration(req: Request, res: Response) {
   try {
     const project = await prisma.project.findMany({
