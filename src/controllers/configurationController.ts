@@ -92,28 +92,40 @@ export async function getAllConfigurations(req: Request, res: Response) {
 
 export async function getConfiguration(req: Request, res: Response) {
   try {
+    // Извлекаем имя проекта из тела запроса
+    const { name } = req.body;
+
+    if (!name) {
+      res.status(400).json({
+        message: 'Project name is required',
+      });
+      return; // Завершаем выполнение функции
+    }
+
+    // Ищем проект в базе данных
     const project = await prisma.project.findMany({
-      where: {
-        name: req.body.name,
-      },
+      where: { name },
       include: {
         blocks: true,
         transitions: true,
       },
     });
 
-    if (!project) {
-      return res.status(404).json({
+    if (!project || project.length === 0) {
+      res.status(404).json({
         message: 'Project not found',
       });
+      return; // Завершаем выполнение функции
     }
 
+    // Успешный ответ
     res.status(200).json({
       message: 'Project configuration retrieved successfully',
       data: project,
     });
   } catch (error) {
     console.error('Error retrieving project configuration:', error);
+
     res.status(500).json({
       message: 'Failed to retrieve project configuration',
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -121,32 +133,47 @@ export async function getConfiguration(req: Request, res: Response) {
   }
 }
 
-export async function deleteConfiguration(req: Request, res: Response) {
+export async function deleteConfiguration(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
+    // Извлекаем имя проекта из тела запроса
+    const { name } = req.body;
+
+    if (!name) {
+      res.status(400).json({
+        message: 'Project name is required',
+      });
+      return; // Завершаем выполнение функции
+    }
+
+    // Находим проект по имени
     const project = await prisma.project.findFirst({
-      where: {
-        name: req.body.name,
-      },
+      where: { name },
     });
 
     if (!project) {
-      return res.status(404).json({
+      res.status(404).json({
         message: 'Project not found',
       });
+      return; // Завершаем выполнение функции
     }
 
-    const deletedProject = await prisma.$transaction([
+    // Удаление данных проекта в транзакции
+    await prisma.$transaction([
       prisma.transition.deleteMany({ where: { projectId: project.id } }),
       prisma.block.deleteMany({ where: { projectId: project.id } }),
       prisma.project.delete({ where: { id: project.id } }),
     ]);
 
-    res.status(200).json({ 
-      message: "Project and related data deleted successfully", 
-      data: deletedProject
+    // Успешный ответ
+    res.status(200).json({
+      message: 'Project and related data deleted successfully',
     });
   } catch (error) {
     console.error('Error deleting project configuration:', error);
+
     res.status(500).json({
       message: 'Failed to delete project configuration',
       error: error instanceof Error ? error.message : 'Unknown error',
