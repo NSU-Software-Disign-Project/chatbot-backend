@@ -1,0 +1,32 @@
+{
+    "class": "GraphLinksModel",
+    "linkFromPortIdProperty": "fromPort",
+    "linkToPortIdProperty": "toPort",
+    "nodeDataArray": [
+        { "key": 0, "category": "startBlock" },
+        { "key": 1, "category": "messageBlock", "message": "Hey there! Let's see if u can drink beer!" },
+        { "key": 2, "category": "conditionalBlock", "value": "age", "condition": ">=", "conditionValue": "18" },
+        { "key": 3, "category": "optionsBlock", "additionalTexts": [{ "text": "Lager" }, { "text": "Stout", "portId": "OUT1" }, { "text": "IPA", "portId": "OUT2" }] },
+        { "key": 4, "category": "saveBlock", "name": "age", "value": "value"},
+        { "key": 5, "category": "messageBlock", "message": "Please tell me how old are u?" },
+        { "key": 6, "category": "messageBlock", "message": "OH YEAHH! Let's drink some beer!" },
+        { "key": 7, "category": "messageBlock", "message": "Which one do u want?" },
+        { "key": 8, "category": "messageBlock", "message": "HELL NO MAN" },
+        { "key": 9, "category": "messageBlock", "message": "Here's your Lager" },
+        { "key": 10, "category": "messageBlock", "message": "Here's your Stout" },
+        { "key": 11, "category": "messageBlock", "message": "Here's your IPA" }
+    ],
+    "linkDataArray": [
+        { "from": 0, "to": 1, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 1, "to": 5, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 5, "to": 4, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 4, "to": 2, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 2, "to": 6, "fromPort": "OUT1", "toPort": "IN" },
+        { "from": 6, "to": 7, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 7, "to": 3, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 2, "to": 8, "fromPort": "OUT2", "toPort": "IN" },
+        { "from": 3, "to": 9, "fromPort": "", "toPort": "IN" },
+        { "from": 3, "to": 10, "fromPort": "OUT1", "toPort": "IN" },
+        { "from": 3, "to": 11, "fromPort": "OUT2", "toPort": "IN" }
+    ]
+}
