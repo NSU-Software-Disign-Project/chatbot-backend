@@ -11,7 +11,7 @@ import {
   serverErrorHandler,
 } from './services/errorHandler';
 import { shutdownServer } from './services/shutDownServer';
-import { ChatInterpreter } from './interpreter/interpreter';
+import { ChatInterpreter } from './interpreter/ChatInterpreter';
 
 // Initialize
 dotenv.config();
