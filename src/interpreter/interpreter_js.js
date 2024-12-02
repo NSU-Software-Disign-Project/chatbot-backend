@@ -144,4 +144,8 @@ class ChatInterpreter {
     }
   }
 
-export default ChatInterpreter;
+// export { ChatInterpreter };
+
+const jsonModel = require("./jsonModel.json");
+const interpreter = new ChatInterpreter(jsonModel);
+interpreter.start();
