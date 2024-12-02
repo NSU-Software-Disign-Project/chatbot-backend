@@ -14,7 +14,8 @@
     "express": "^4.21.1",
     "mongodb": "^6.11.0",
     "mongoose": "^8.8.2",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

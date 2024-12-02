@@ -92,10 +92,10 @@ export async function getAllConfigurations(req: Request, res: Response) {
 
 export async function getConfiguration(req: Request, res: Response) {
   try {
-    // Извлекаем имя проекта из тела запроса
-    const { name } = req.body;
+    
+    const projectName = req.query.projectName;
 
-    if (!name) {
+    if (!projectName) {
       res.status(400).json({
         message: 'Project name is required',
       });
@@ -104,7 +104,7 @@ export async function getConfiguration(req: Request, res: Response) {
 
     // Ищем проект в базе данных
     const project = await prisma.project.findMany({
-      where: { name },
+      where: { name: projectName.toString() },
       include: {
         blocks: true,
         transitions: true,
