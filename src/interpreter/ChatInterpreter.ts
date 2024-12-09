@@ -1,20 +1,30 @@
 import { IChatIO } from "./interpreterServices/IChatIO";
 
 interface NodeData {
-  key: number;
-  category: string;
-  message?: string;
-  name?: string;
-  value?: string;
-  condition?: string;
-  conditionValue?: string;
-  additionalTexts?: { text: string; portId?: string }[];
+  id: number;
+  type: string;
+  text?: string;
+  variableName?: string;
+  variableValue?: string | number | boolean;
+  conditions?: { 
+    conditionId: number;
+    variableName: string;
+    condition: string;
+    conditionValue: string | number | boolean;
+    portId: string;
+  }[];
+  choises?: {
+    choiseId: number;
+    text: string;
+    portId: string;
+  }[];
 }
 
 interface LinkData {
   from: number;
   to: number;
   fromPort?: string;
+  toPort?: string;
 }
 
 interface Model {
@@ -25,172 +35,183 @@ interface Model {
 class ChatInterpreter {
   private model: Model;
   private nodeMap: Map<number, NodeData> = new Map();
-  private variables: Record<string, string> = {};
-  private currentNode: NodeData | undefined;
+  private variables: Record<string, string | number | boolean> = {};
+  private currentNodeId: number | null = null;
   private output: IChatIO;
 
   constructor(model: Model, output: IChatIO) {
     this.model = model;
     this.output = output;
-    this.currentNode = model.nodeDataArray.find((node) => node.category === "startBlock");
     this.prepareNodeMap();
+    const startNode = model.nodeDataArray.find((node) => node.type === "startBlock");
+    this.currentNodeId = startNode ? startNode.id : null;
   }
 
   private prepareNodeMap(): void {
     this.model.nodeDataArray.forEach((node) => {
-      this.nodeMap.set(node.key, node);
+      this.nodeMap.set(node.id, node);
     });
   }
 
-  private getLinksFromCurrentNode(): LinkData[] {
-    if (!this.currentNode) return [];
-    return this.model.linkDataArray.filter((link) => link.from === this.currentNode!.key);
+  private getLinksFromNode(nodeId: number): LinkData[] {
+    return this.model.linkDataArray.filter((link) => link.from === nodeId);
   }
 
   public start(): void {
-    if (!this.currentNode) {
+    if (this.currentNodeId === null) {
       this.output.sendMessage("Не найден стартовый блок!");
       this.output.close();
       return;
     }
-    this.processNode();
+
+    while (this.currentNodeId !== null) {
+      this.processNode();
+    }
+
+    this.output.sendMessage("Чат завершён!");
+    this.output.close();
   }
 
   private processNode(): void {
-    if (!this.currentNode) {
-      this.output.sendMessage("Чат завершен!");
-      this.output.close();
+    const currentNode = this.nodeMap.get(this.currentNodeId!);
+    if (!currentNode) {
+      this.output.sendMessage(`Ошибка: не найден блок с ID ${this.currentNodeId}`);
+      this.currentNodeId = null;
       return;
     }
 
-    const { category, message, name, value, condition, conditionValue, additionalTexts } = this.currentNode;
+    const { type, text, variableName, variableValue, conditions, choises } = currentNode;
 
-    switch (category) {
+    switch (type) {
       case "startBlock":
-        this.handleStartBlock();
+        this.moveToNextNode(this.getLinksFromNode(currentNode.id));
         break;
 
       case "messageBlock":
-        this.output.sendMessage(this.interpolateMessage(message || ""));
-        this.moveNext(this.getLinksFromCurrentNode());
+        this.output.sendMessage(this.interpolateMessage(text || ""));
+        this.moveToNextNode(this.getLinksFromNode(currentNode.id));
         break;
 
       case "saveBlock":
-        this.handleSaveBlock(name || "");
+        this.output.getInput(`Введите значение для "${variableName}": `, (input) => {
+          this.variables[variableName!] = input;
+          this.moveToNextNode(this.getLinksFromNode(currentNode.id));
+        });
         break;
 
       case "conditionalBlock":
-        this.handleConditionalBlock(value || "", condition || "", conditionValue || "");
+        this.handleConditionalBlock(conditions || [], this.getLinksFromNode(currentNode.id));
         break;
 
       case "optionsBlock":
-        this.handleOptionsBlock(additionalTexts || []);
+        this.handleOptionsBlock(choises, this.getLinksFromNode(currentNode.id));
         break;
 
       default:
-        this.output.sendMessage(`Неизвестный тип блока: ${category}`);
-        this.output.close();
+        this.output.sendMessage(`Неизвестный тип блока: ${type}`);
+        this.currentNodeId = null;
     }
   }
 
-  private handleStartBlock(): void {
-    const links = this.getLinksFromCurrentNode();
-    if (links.length) {
-      this.currentNode = this.nodeMap.get(links[0].to);
-      this.processNode();
+  private handleConditionalBlock(
+    conditions: NodeData["conditions"],
+    links: LinkData[]
+  ): void {
+    for (const condition of conditions!) {
+      const variableValue = this.variables[condition.variableName];
+      const conditionMet = this.checkCondition(variableValue, condition.condition, condition.conditionValue);
+
+      if (conditionMet) {
+        const nextLink = links.find((link) => link.fromPort === condition.portId);
+        if (nextLink) {
+          this.currentNodeId = nextLink.to;
+          return;
+        }
+      }
+    }
+
+    // Default переход (если условия не выполнены)
+    const defaultLink = links.find((link) => !link.fromPort);
+    if (defaultLink) {
+      this.currentNodeId = defaultLink.to;
     } else {
-      this.output.sendMessage("Чат завершен! (Нет связей из стартового блока)");
-      this.output.close();
+      this.output.sendMessage("Нет связи по умолчанию из блока с условиями.");
+      this.currentNodeId = null;
     }
   }
 
-  private handleSaveBlock(name: string): void {
-    this.output.getInput(`Введите значение для "${name}": `, (input) => {
-      this.variables[name] = input;
-      this.moveNext(this.getLinksFromCurrentNode());
-    });
-  }
-
-  private handleConditionalBlock(value: string, condition: string, conditionValue: string | number): void {
-    const variableValue = parseFloat(this.variables[value]);
-    const targetValue = parseFloat(conditionValue as string);
-
-    const conditionCheckers: { [key: string]: (a: number, b: number) => boolean } = {
-      '>=': (a, b) => a >= b,
-      '<=': (a, b) => a <= b,
-      '>': (a, b) => a > b,
-      '<': (a, b) => a < b,
-      '==': (a, b) => a === b,
-      '!=': (a, b) => a !== b,
-    };
-
-    const isConditionMet = conditionCheckers[condition]?.(variableValue, targetValue);
-
-    const nextLink = isConditionMet
-      ? this.getLinksFromCurrentNode().find((link) => link.fromPort === 'OUT1')
-      : this.getLinksFromCurrentNode().find((link) => link.fromPort === 'OUT2');
-  
-    if (nextLink) {
-      this.currentNode = this.nodeMap.get(nextLink.to);
-      this.processNode();
-    } else {
-      this.output.sendMessage("Нет подходящей связи для перехода. Условие не выполнено.");
-      this.output.close();
+  private handleOptionsBlock(choises: NodeData["choises"], links: LinkData[]): void {
+    if (!choises || choises.length === 0) {
+      this.output.sendMessage("Нет вариантов для выбора.");
+      this.currentNodeId = null;
+      return;
     }
-  }
-  
 
-  private handleOptionsBlock(additionalTexts: { text: string; portId?: string }[]): void {
-    const options = additionalTexts.map((option, index) => `${index + 1}. ${option.text}`).join("\n");
+    const options = choises.map((choice, index) => `${index + 1}. ${choice.text}`).join("\n");
     this.output.getInput(`Выберите вариант:\n${options}`, (input) => {
       const choiceIndex = parseInt(input, 10) - 1;
-      const chosenOption = additionalTexts[choiceIndex];
 
-      if (chosenOption) {
-        const links = this.getLinksFromCurrentNode();
+      if (choiceIndex >= 0 && choiceIndex < choises.length) {
+        const chosenOption = choises[choiceIndex];
         const nextLink = links.find((link) => link.fromPort === chosenOption.portId);
-        if (nextLink) {
-          this.currentNode = this.nodeMap.get(nextLink.to);
-        } else {
-          this.output.sendMessage("Нет связи для выбранного варианта.");
-          this.output.close();
-        }
-      } else {
-        this.output.sendMessage("Неверный выбор.");
-      }
 
-      this.processNode();
+        if (nextLink) {
+          this.currentNodeId = nextLink.to;
+          return;
+        }
+      }
+      this.output.sendMessage("Неверный выбор.");
+      this.currentNodeId = null;
     });
+  }
+
+  private checkCondition(
+    variableValue: string | number | boolean | undefined,
+    operator: string,
+    conditionValue: string | number | boolean
+  ): boolean {
+    const conditionCheckers: Record<string, (a: any, b: any) => boolean> = {
+      ">=": (a, b) => a >= b,
+      "<=": (a, b) => a <= b,
+      ">": (a, b) => a > b,
+      "<": (a, b) => a < b,
+      "==": (a, b) => a === b,
+      "!=": (a, b) => a !== b,
+    };
+
+    return conditionCheckers[operator]?.(variableValue, conditionValue) ?? false;
   }
 
   private interpolateMessage(message: string): string {
-    return message.replace(/{(.*?)}/g, (_, varName) => this.variables[varName] || `{${varName}}`);
-  }
+    return message.replace(/{(.*?)}/g, (_, varName) => {
+        const value = this.variables[varName];
+        return value !== undefined ? String(value) : `{${varName}}`;
+    });
+}
 
-  private moveNext(links: LinkData[]): void {
+
+  private moveToNextNode(links: LinkData[]): void {
     if (links.length === 1) {
-      this.currentNode = this.nodeMap.get(links[0].to);
-      this.processNode();
+      this.currentNodeId = links[0].to;
     } else if (links.length > 1) {
       const options = links.map((link, index) => {
         const toNode = this.nodeMap.get(link.to);
-        return `${index + 1}. ${toNode?.message || "Следующий шаг"}`;
+        return `${index + 1}. ${toNode?.text || "Следующий шаг"}`;
       }).join("\n");
 
       this.output.getInput(`Выберите действие:\n${options}`, (input) => {
         const choiceIndex = parseInt(input, 10) - 1;
 
         if (choiceIndex >= 0 && choiceIndex < links.length) {
-          this.currentNode = this.nodeMap.get(links[choiceIndex].to);
+          this.currentNodeId = links[choiceIndex].to;
         } else {
           this.output.sendMessage("Неверный выбор.");
+          this.currentNodeId = null;
         }
-
-        this.processNode();
       });
     } else {
-      this.output.sendMessage("Нет связей для перехода. Чат завершен.");
-      this.output.close();
+      this.output.sendMessage("Нет связей для перехода. Чат завершён.");
+      this.currentNodeId = null;
     }
   }
 }

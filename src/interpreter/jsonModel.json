@@ -3,18 +3,25 @@
     "linkFromPortIdProperty": "fromPort",
     "linkToPortIdProperty": "toPort",
     "nodeDataArray": [
-        { "key": 0, "category": "startBlock" },
-        { "key": 1, "category": "messageBlock", "message": "Hey there! Let's see if u can drink beer!" },
-        { "key": 2, "category": "conditionalBlock", "value": "age", "condition": ">=", "conditionValue": "18" },
-        { "key": 3, "category": "optionsBlock", "additionalTexts": [{ "text": "Lager", "portId":"OUT0" }, { "text": "Stout", "portId": "OUT1" }, { "text": "IPA", "portId": "OUT2" }] },
-        { "key": 4, "category": "saveBlock", "name": "age", "value": "value"},
-        { "key": 5, "category": "messageBlock", "message": "Please tell me how old are u?" },
-        { "key": 6, "category": "messageBlock", "message": "OH YEAHH! Let's drink some beer!" },
-        { "key": 7, "category": "messageBlock", "message": "Which one do u want?" },
-        { "key": 8, "category": "messageBlock", "message": "HELL NO MAN" },
-        { "key": 9, "category": "messageBlock", "message": "Here's your Lager" },
-        { "key": 10, "category": "messageBlock", "message": "Here's your Stout" },
-        { "key": 11, "category": "messageBlock", "message": "Here's your IPA" }
+        { "id": 0, "type": "startBlock" },
+        { "id": 1, "type": "messageBlock", "text": "Hey there! Let's see if u can drink beer!" },
+        { "id": 2, "type": "conditionalBlock",  "conditions": [
+                    { "conditionId": 0, "variableName": "age", "condition": ">=", "conditionValue": 18, "portId":"OUT0" }, 
+                    { "conditionId": 1, "variableName": "age", "condition": ">=", "conditionValue": 21, "portId":"OUT1" }
+                ] },
+        { "id": 3, "type": "optionsBlock", "choises": [
+                                    { "choiseId": 0, "text": "Lager", "portId":"OUT0" }, 
+                                    { "choiseId": 1, "text": "Stout", "portId": "OUT1" }, 
+                                    { "choiseId": 2, "text": "IPA", "portId": "OUT2" }
+                                ] },
+        { "id": 4, "type": "saveBlock", "variableName": "age", "variableValue": "value"},
+        { "id": 5, "type": "messageBlock", "text": "Please tell me how old are u?" },
+        { "id": 6, "type": "messageBlock", "text": "OH YEAHH! Let's drink some beer!" },
+        { "id": 7, "type": "messageBlock", "text": "Which one do u want?" },
+        { "id": 8, "type": "messageBlock", "text": "HELL NO MAN" },
+        { "id": 9, "type": "messageBlock", "text": "Here's your Lager" },
+        { "id": 10, "type": "messageBlock", "text": "Here's your Stout" },
+        { "id": 11, "type": "messageBlock", "text": "Here's your IPA" }
     ],
     "linkDataArray": [
         { "from": 0, "to": 1, "fromPort": "OUT", "toPort": "IN" },
