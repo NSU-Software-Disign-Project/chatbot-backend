@@ -6,7 +6,7 @@
         { "id": 0, "type": "startBlock" },
         { "id": 1, "type": "messageBlock", "text": "Hey there! Let's see if u can drink beer!" },
         { "id": 2, "type": "conditionalBlock",  "conditions": [
-                    { "conditionId": 0, "variableName": "age", "condition": ">=", "conditionValue": 18, "portId":"OUT0" }, 
+                    { "conditionId": 0, "variableName": "age", "condition": ">=", "conditionValue": 18, "portId":"OUT1" }, 
                     { "conditionId": 1, "variableName": "age", "condition": ">=", "conditionValue": 21, "portId":"OUT1" }
                 ] },
         { "id": 3, "type": "optionsBlock", "choises": [
@@ -29,9 +29,9 @@
         { "from": 5, "to": 4, "fromPort": "OUT", "toPort": "IN" },
         { "from": 4, "to": 2, "fromPort": "OUT", "toPort": "IN" },
         { "from": 2, "to": 6, "fromPort": "OUT1", "toPort": "IN" },
+        { "from": 2, "to": 8, "fromPort": "OUT0", "toPort": "IN" },
         { "from": 6, "to": 7, "fromPort": "OUT", "toPort": "IN" },
         { "from": 7, "to": 3, "fromPort": "OUT", "toPort": "IN" },
-        { "from": 2, "to": 8, "fromPort": "OUT2", "toPort": "IN" },
         { "from": 3, "to": 9, "fromPort": "OUT0", "toPort": "IN" },
         { "from": 3, "to": 10, "fromPort": "OUT1", "toPort": "IN" },
         { "from": 3, "to": 11, "fromPort": "OUT2", "toPort": "IN" }
