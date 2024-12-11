@@ -9,18 +9,18 @@ class WebSocketIO implements IChatIO {
     }
   
     sendMessage(message: string): void {
-      this.ws.send(JSON.stringify({ type: "message", content: message }));
+      this.ws.send(JSON.stringify({ type: "message", data: message }));
     }
   
     getInput(prompt: string, callback: (input: string) => void): void {
-      this.sendMessage(prompt);
+      this.ws.send(JSON.stringify({ type: "input", data: prompt }));
   
       const handleMessage = (message: string) => {
         try {
-          const data = JSON.parse(message);
-          if (data.type === "input") {
+          const parsed = JSON.parse(message);
+          if (parsed.type === "input") {
             this.ws.off("message", handleMessage); // Удаляем обработчик после получения ввода
-            callback(data.content);
+            callback(parsed.data);
           }
         } catch (e) {
           this.sendMessage("Ошибка: Неверный формат сообщения.");
@@ -34,3 +34,5 @@ class WebSocketIO implements IChatIO {
       this.ws.close();
     }
   }
+
+  export { WebSocketIO };

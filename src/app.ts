@@ -11,7 +11,7 @@ import {
   serverErrorHandler,
 } from './services/errorHandler';
 import { shutdownServer } from './services/shutDownServer';
-import { ChatInterpreter } from './interpreter/ChatInterpreter';
+import { startWebSocketServer } from './interpreter/interpreterServices/WebSocketServer';
 
 // Initialize
 dotenv.config();
@@ -42,6 +42,9 @@ const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+const WebSocketPort = 8989;
+startWebSocketServer(WebSocketPort);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

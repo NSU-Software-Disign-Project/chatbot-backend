@@ -16,6 +16,7 @@
     "mongodb": "^6.11.0",
     "mongoose": "^8.8.2",
     "nodemon": "^3.1.7",
+    "socket.io": "^4.8.1",
     "ws": "^8.18.0"
   },
   "devDependencies": {
