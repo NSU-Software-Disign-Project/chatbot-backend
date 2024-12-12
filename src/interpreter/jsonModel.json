@@ -1,0 +1,39 @@
+{
+    "class": "GraphLinksModel",
+    "linkFromPortIdProperty": "fromPort",
+    "linkToPortIdProperty": "toPort",
+    "nodeDataArray": [
+        { "id": 0, "type": "startBlock" },
+        { "id": 1, "type": "messageBlock", "text": "Hey there! Let's see if u can drink beer!" },
+        { "id": 2, "type": "conditionalBlock",  "conditions": [
+                    { "conditionId": 0, "variableName": "age", "condition": ">=", "conditionValue": 18, "portId":"OUT1" }, 
+                    { "conditionId": 1, "variableName": "age", "condition": ">=", "conditionValue": 21, "portId":"OUT1" }
+                ] },
+        { "id": 3, "type": "optionsBlock", "choises": [
+                                    { "choiseId": 0, "text": "Lager", "portId":"OUT0" }, 
+                                    { "choiseId": 1, "text": "Stout", "portId": "OUT1" }, 
+                                    { "choiseId": 2, "text": "IPA", "portId": "OUT2" }
+                                ] },
+        { "id": 4, "type": "saveBlock", "variableName": "age", "variableValue": "value"},
+        { "id": 5, "type": "messageBlock", "text": "Please tell me how old are u?" },
+        { "id": 6, "type": "messageBlock", "text": "OH YEAHH! Let's drink some beer!" },
+        { "id": 7, "type": "messageBlock", "text": "Which one do u want?" },
+        { "id": 8, "type": "messageBlock", "text": "HELL NO MAN" },
+        { "id": 9, "type": "messageBlock", "text": "Here's your Lager" },
+        { "id": 10, "type": "messageBlock", "text": "Here's your Stout" },
+        { "id": 11, "type": "messageBlock", "text": "Here's your IPA" }
+    ],
+    "linkDataArray": [
+        { "from": 0, "to": 1, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 1, "to": 5, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 5, "to": 4, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 4, "to": 2, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 2, "to": 6, "fromPort": "OUT1", "toPort": "IN" },
+        { "from": 2, "to": 8, "fromPort": "OUT0", "toPort": "IN" },
+        { "from": 6, "to": 7, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 7, "to": 3, "fromPort": "OUT", "toPort": "IN" },
+        { "from": 3, "to": 9, "fromPort": "OUT0", "toPort": "IN" },
+        { "from": 3, "to": 10, "fromPort": "OUT1", "toPort": "IN" },
+        { "from": 3, "to": 11, "fromPort": "OUT2", "toPort": "IN" }
+    ]
+}
