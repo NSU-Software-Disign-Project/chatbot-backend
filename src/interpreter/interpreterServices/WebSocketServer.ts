@@ -2,7 +2,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { WebSocketService } from "./WebSocketService";
 
-export function startWebSocketServer(port: number): void {
+export function startWebSocketServer(port: string | number): void {
     const httpServer = createServer();
 
     const io = new Server(httpServer);

@@ -43,8 +43,8 @@ const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-const WebSocketPort = 8989;
-startWebSocketServer(WebSocketPort);
+const WEBSOCKETPORT = process.env.WEBSOCKETPORT || 8080;
+startWebSocketServer(WEBSOCKETPORT);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
