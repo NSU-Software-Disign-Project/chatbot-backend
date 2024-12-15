@@ -11,7 +11,8 @@ import {
   serverErrorHandler,
 } from './services/errorHandler';
 import { shutdownServer } from './services/shutDownServer';
-import { startWebSocketServer } from './interpreter/interpreterServices/WebSocketServer';
+import { createServer } from 'http';
+import { WebSocketService } from './interpreter/interpreterServices/WebSocketService';
 
 // Initialize
 dotenv.config();
@@ -20,7 +21,10 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST", "DELETE", "PUT", "PATCH"]
+}));
 
 // Routes
 app.use('/api', configurationRoute);
@@ -36,15 +40,16 @@ app.use((req: Request, res: Response) => {
 // Global error handler
 app.use(serverErrorHandler);
 
+// Start server
+const server = createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+const socketServer = new WebSocketService(server);
+socketServer.start();
 
-const WEBSOCKETPORT = process.env.WEBSOCKETPORT || 8080;
-startWebSocketServer(WEBSOCKETPORT);
+server.listen(PORT, () => {
+  console.log(`Сервер запущен на http://localhost:${PORT}`);
+});
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

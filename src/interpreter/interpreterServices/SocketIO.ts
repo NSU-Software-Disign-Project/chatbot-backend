@@ -17,6 +17,10 @@ class SocketIO implements IChatIO {
     this.socket.once("input", callback);
   }
 
+  sendError(message: string): void {
+    this.socket.emit("error", message);
+  }
+
   close(): void {
     this.socket.disconnect(true);
   }
