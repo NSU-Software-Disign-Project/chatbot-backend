@@ -1,5 +1,5 @@
 import { LinkData, Model, NodeData } from "./BotModel";
-import { IChatIO } from "./interpreterServices/IChatIO";
+import { IChatIO } from "./io/IChatIO";
 
 class ChatInterpreter {
   private model: Model;

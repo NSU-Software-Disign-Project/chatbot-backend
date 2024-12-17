@@ -27,6 +27,10 @@ class ConsoleChatIO implements IChatIO {
   close(): void {
     this.rl.close();
   }
+
+  sendError(message: string): void {
+    throw new Error("Method not implemented.");
+  }
 }
 
 export { ConsoleChatIO };
