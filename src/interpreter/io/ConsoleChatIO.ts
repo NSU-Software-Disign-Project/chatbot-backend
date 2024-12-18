@@ -29,7 +29,7 @@ class ConsoleChatIO implements IChatIO {
   }
 
   sendError(message: string): void {
-    throw new Error("Method not implemented.");
+    console.error(message);
   }
 }
 
