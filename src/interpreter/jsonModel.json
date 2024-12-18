@@ -6,7 +6,7 @@
         { "id": 0, "type": "startBlock" },
         { "id": 1, "type": "messageBlock", "text": "Hey there! Let's see if u can drink beer!" },
         { "id": 2, "type": "conditionalBlock",  "conditions": [
-                    { "conditionId": 0, "variableName": "age", "condition": ">=", "conditionValue": 18, "portId":"OUT1" }, 
+                    { "conditionId": 0, "variableName": "age", "condition": ">=", "conditionValue": 18, "portId":"OUT0" }, 
                     { "conditionId": 1, "variableName": "age", "condition": ">=", "conditionValue": 21, "portId":"OUT1" }
                 ] },
         { "id": 3, "type": "optionsBlock", "choises": [

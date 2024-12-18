@@ -27,6 +27,10 @@ class ConsoleChatIO implements IChatIO {
   close(): void {
     this.rl.close();
   }
+
+  sendError(message: string): void {
+    console.error(message);
+  }
 }
 
 export { ConsoleChatIO };

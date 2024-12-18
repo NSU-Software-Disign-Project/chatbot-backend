@@ -1,41 +1,10 @@
-import { IChatIO } from "./interpreterServices/IChatIO";
-
-interface NodeData {
-  id: number;
-  type: string;
-  text?: string;
-  variableName?: string;
-  variableValue?: string | number | boolean;
-  conditions?: { 
-    conditionId: number;
-    variableName: string;
-    condition: string;
-    conditionValue: string | number | boolean;
-    portId: string;
-  }[];
-  choises?: {
-    choiseId: number;
-    text: string;
-    portId: string;
-  }[];
-}
-
-interface LinkData {
-  from: number;
-  to: number;
-  fromPort?: string;
-  toPort?: string;
-}
-
-interface Model {
-  nodeDataArray: NodeData[];
-  linkDataArray: LinkData[];
-}
+import { LinkData, Model, NodeData } from "./BotModel";
+import { IChatIO } from "./io/IChatIO";
 
 class ChatInterpreter {
   private model: Model;
   private nodeMap: Map<number, NodeData> = new Map();
-  private variables: Record<string, string | number | boolean> = {};
+  private variables: Map<string, string | number | boolean> = new Map();
   private currentNode: NodeData | undefined = undefined;
   private output: IChatIO;
 
@@ -63,7 +32,6 @@ class ChatInterpreter {
       this.output.close();
       return;
     }
-
     this.processNode();
   }
 
@@ -87,7 +55,7 @@ class ChatInterpreter {
 
       case "saveBlock":
         this.output.getInput(`Введите значение для "${variableName}": `, (input) => {
-          this.variables[variableName!] = input;
+          this.variables.set(variableName!, input);
           this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
         });
         break;
@@ -110,7 +78,7 @@ class ChatInterpreter {
     links: LinkData[]
   ): void {
     for (const condition of conditions!) {
-      const variableValue = this.variables[condition.variableName];
+      const variableValue = this.variables.get(condition.variableName);
       const conditionMet = this.checkCondition(variableValue, condition.condition, condition.conditionValue);
 
       if (conditionMet) {
@@ -179,7 +147,7 @@ class ChatInterpreter {
 
   private interpolateMessage(message: string): string {
     return message.replace(/{(.*?)}/g, (_, varName) => {
-        const value = this.variables[varName];
+        const value = this.variables.get(varName);
         return value !== undefined ? String(value) : `{${varName}}`;
     });
 }
