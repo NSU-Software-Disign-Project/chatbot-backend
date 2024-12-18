@@ -13,8 +13,10 @@ class SocketIO implements IChatIO {
   }
 
   getInput(prompt: string, callback: (input: string) => void): void {
-    this.socket.emit("input", prompt);
-    this.socket.once("input", callback);
+    this.socket.emit("requestInput", prompt);
+    this.socket.once("inputResponse", (input: string) => {
+      callback(input);
+    });
   }
 
   sendError(message: string): void {

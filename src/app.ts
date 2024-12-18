@@ -54,17 +54,17 @@ server.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Closing HTTP server and Prisma Client...');
-  shutdownServer(server, prisma);
+  shutdownServer(server, prisma, socketServer);
 });
 process.on('SIGINT', async () => {
   console.log('SIGINT received. Closing HTTP server and Prisma Client...');
-  shutdownServer(server, prisma);
+  shutdownServer(server, prisma, socketServer);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  shutdownServer(server, prisma);
+  shutdownServer(server, prisma, socketServer);
 });
 
 export default app;

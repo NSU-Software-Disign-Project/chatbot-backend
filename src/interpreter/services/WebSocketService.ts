@@ -7,7 +7,12 @@ export class WebSocketService {
     private io: Server;
 
     constructor(httpServer: HTTPServer) {
-        this.io = new Server(httpServer);
+        this.io = new Server(httpServer, {
+            cors: {
+                origin: "http://localhost:3000",
+                methods: ["GET", "POST"]
+            }
+        });
     }
 
     start(): void {
@@ -29,6 +34,19 @@ export class WebSocketService {
             socket.on("error", (err) => {
                 console.error("Ошибка на сервере:", err);
             });
+        });
+    }
+
+    stop(): void {
+        console.log("Остановка WebSocket сервера...");
+
+        this.io.sockets.sockets.forEach((socket) => {
+            console.log(`Отключение клиента ${socket.id}`);
+            socket.disconnect(true);
+        });
+
+        this.io.close(() => {
+            console.log("WebSocket сервер успешно остановлен");
         });
     }
 }
