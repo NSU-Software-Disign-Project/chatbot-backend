@@ -8,8 +8,8 @@ class SocketIO implements IChatIO {
     this.socket = socket;
   }
 
-  sendMessage(message: string): void {
-    this.socket.emit("message", message);
+  close(): void {
+    this.socket.disconnect(true);
   }
 
   getInput(prompt: string, callback: (input: string) => void): void {
@@ -23,8 +23,8 @@ class SocketIO implements IChatIO {
     this.socket.emit("error", message);
   }
 
-  close(): void {
-    this.socket.disconnect(true);
+  sendMessage(message: string): void {
+    this.socket.emit("message", message);
   }
 }
 

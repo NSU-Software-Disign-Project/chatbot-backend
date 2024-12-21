@@ -1,4 +1,4 @@
-import { WebSocketService } from "../control/WebSocketService";
+import { WebSocketService } from "../boundary/websocket/WebSocketService";
 
 export const shutdownServer = async (server: any, prisma: any, socketServer: WebSocketService) => {
     await prisma.$disconnect();

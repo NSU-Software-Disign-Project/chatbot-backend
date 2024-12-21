@@ -12,7 +12,7 @@ import {
 } from './services/errorHandler';
 import { shutdownServer } from './services/shutDownServer';
 import { createServer } from 'http';
-import { WebSocketService } from './control/WebSocketService';
+import { WebSocketService } from './boundary/websocket/WebSocketService';
 
 // Initialize
 dotenv.config();

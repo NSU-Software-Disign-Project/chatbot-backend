@@ -2,12 +2,11 @@ import { LinkData, Model, NodeData } from "../entity/BotModel";
 import { IChatIO } from "../boundary/io/IChatIO";
 
 class ChatInterpreter {
+  private currentNode: NodeData | undefined = undefined;
   private model: Model;
   private nodeMap: Map<number, NodeData> = new Map();
-  private variables: Map<string, string | number | boolean> = new Map();
-  private currentNode: NodeData | undefined = undefined;
   private output: IChatIO;
-
+  private variables: Map<string, string | number | boolean> = new Map();
   constructor(model: Model, output: IChatIO) {
     this.model = model;
     this.output = output;
@@ -16,61 +15,25 @@ class ChatInterpreter {
     this.currentNode = startNode || undefined;
   }
 
-  private prepareNodeMap(): void {
-    this.model.nodeDataArray.forEach((node) => {
-      this.nodeMap.set(node.id, node);
-    });
+  private checkCondition(
+    variableValue: string | number | boolean | undefined,
+    operator: string,
+    conditionValue: string | number | boolean
+  ): boolean {
+    const conditionCheckers: Record<string, (a: any, b: any) => boolean> = {
+      ">=": (a, b) => a >= b,
+      "<=": (a, b) => a <= b,
+      ">": (a, b) => a > b,
+      "<": (a, b) => a < b,
+      "==": (a, b) => a === b,
+      "!=": (a, b) => a !== b,
+    };
+
+    return conditionCheckers[operator]?.(variableValue, conditionValue) ?? false;
   }
 
   private getLinksFromNode(nodeId: number): LinkData[] {
     return this.model.linkDataArray.filter((link) => link.from === nodeId);
-  }
-
-  public start(): void {
-    if (!this.currentNode) {
-      this.output.sendMessage("Не найден стартовый блок!");
-      this.output.close();
-      return;
-    }
-    this.processNode();
-  }
-
-  private processNode(): void {
-    if (!this.currentNode) {
-      this.output.sendMessage(`Ошибка: не найден блок`);
-      return;
-    }
-
-    const { type, text, variableName, variableValue, conditions, choises } = this.currentNode;
-
-    switch (type) {
-      case "startBlock":
-        this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
-        break;
-
-      case "messageBlock":
-        this.output.sendMessage(this.interpolateMessage(text || ""));
-        this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
-        break;
-
-      case "saveBlock":
-        this.output.getInput(`Введите значение для "${variableName}": `, (input) => {
-          this.variables.set(variableName!, input);
-          this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
-        });
-        break;
-
-      case "conditionalBlock":
-        this.handleConditionalBlock(conditions || [], this.getLinksFromNode(this.currentNode.id));
-        break;
-
-      case "optionsBlock":
-        this.handleOptionsBlock(choises, this.getLinksFromNode(this.currentNode.id));
-        break;
-
-      default:
-        this.output.sendMessage(`Неизвестный тип блока: ${type}`);
-    }
   }
 
   private handleConditionalBlock(
@@ -128,30 +91,12 @@ class ChatInterpreter {
     });
   }
 
-  private checkCondition(
-    variableValue: string | number | boolean | undefined,
-    operator: string,
-    conditionValue: string | number | boolean
-  ): boolean {
-    const conditionCheckers: Record<string, (a: any, b: any) => boolean> = {
-      ">=": (a, b) => a >= b,
-      "<=": (a, b) => a <= b,
-      ">": (a, b) => a > b,
-      "<": (a, b) => a < b,
-      "==": (a, b) => a === b,
-      "!=": (a, b) => a !== b,
-    };
-
-    return conditionCheckers[operator]?.(variableValue, conditionValue) ?? false;
-  }
-
   private interpolateMessage(message: string): string {
     return message.replace(/{(.*?)}/g, (_, varName) => {
         const value = this.variables.get(varName);
         return value !== undefined ? String(value) : `{${varName}}`;
     });
 }
-
 
   private moveToNextNode(links: LinkData[]): void {
     if (links.length === 1) {
@@ -179,6 +124,59 @@ class ChatInterpreter {
       this.output.close();
       this.currentNode = undefined;
     }
+  }
+
+  private prepareNodeMap(): void {
+    this.model.nodeDataArray.forEach((node) => {
+      this.nodeMap.set(node.id, node);
+    });
+  }
+
+  private processNode(): void {
+    if (!this.currentNode) {
+      this.output.sendMessage(`Ошибка: не найден блок`);
+      return;
+    }
+
+    const { type, text, variableName, variableValue, conditions, choises } = this.currentNode;
+
+    switch (type) {
+      case "startBlock":
+        this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
+        break;
+
+      case "messageBlock":
+        this.output.sendMessage(this.interpolateMessage(text || ""));
+        this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
+        break;
+
+      case "saveBlock":
+        this.output.getInput(`Введите значение для "${variableName}": `, (input) => {
+          this.variables.set(variableName!, input);
+          this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
+        });
+        break;
+
+      case "conditionalBlock":
+        this.handleConditionalBlock(conditions || [], this.getLinksFromNode(this.currentNode.id));
+        break;
+
+      case "optionsBlock":
+        this.handleOptionsBlock(choises, this.getLinksFromNode(this.currentNode.id));
+        break;
+
+      default:
+        this.output.sendMessage(`Неизвестный тип блока: ${type}`);
+    }
+  }
+
+  public start(): void {
+    if (!this.currentNode) {
+      this.output.sendMessage("Не найден стартовый блок!");
+      this.output.close();
+      return;
+    }
+    this.processNode();
   }
 }
 
