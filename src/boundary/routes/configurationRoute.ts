@@ -1,5 +1,5 @@
 import express from "express";
-import { saveConfiguration, getConfiguration, deleteConfiguration, getAllConfigurations } from "../api/configurationController";
+import { saveConfiguration, getConfiguration, deleteConfiguration, getAllConfigurations } from "../../control/api/configurationController";
 
 
 const router = express.Router();

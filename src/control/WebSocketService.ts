@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import { Server as HTTPServer } from "http";
-import { ChatInterpreter } from "../ChatInterpreter";
-import { SocketIO } from "../io/SocketIO";
+import { ChatInterpreter } from "./ChatInterpreter";
+import { SocketIO } from "../boundary/io/SocketIO";
 
 export class WebSocketService {
     private io: Server;

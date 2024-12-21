@@ -1,4 +1,4 @@
-// controllers/projectController.ts
+
 import { Request, Response } from 'express';
 import {
   upsertProject,

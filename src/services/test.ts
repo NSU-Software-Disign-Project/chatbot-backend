@@ -1,5 +1,5 @@
-import { ChatInterpreter } from './ChatInterpreter';
-import { ConsoleChatIO } from './io/ConsoleChatIO';
+import { ChatInterpreter } from '../control/ChatInterpreter';
+import { ConsoleChatIO } from '../boundary/io/ConsoleChatIO';
 
 const rl = new ConsoleChatIO();
 const interpreter = new ChatInterpreter(require('./jsonModel.json'), rl);

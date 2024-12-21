@@ -5,14 +5,14 @@ import express, {
 } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import configurationRoute from './routes/configurationRoute';
+import configurationRoute from './boundary/routes/configurationRoute';
 import {
   prismaErrorHandler,
   serverErrorHandler,
 } from './services/errorHandler';
 import { shutdownServer } from './services/shutDownServer';
 import { createServer } from 'http';
-import { WebSocketService } from './interpreter/services/WebSocketService';
+import { WebSocketService } from './control/WebSocketService';
 
 // Initialize
 dotenv.config();
