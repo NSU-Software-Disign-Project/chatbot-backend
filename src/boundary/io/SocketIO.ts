@@ -16,7 +16,9 @@ class SocketIO implements IChatIO {
   async getInput(prompt: string): Promise<string> {
     return new Promise((resolve) => {
       this.socket.emit("requestInput", prompt);
+      console.log("Input requested:", prompt);
       this.socket.once("inputResponse", (input: string) => {
+        console.log("Input received:", input);
         resolve(input);
       });
     });
@@ -24,10 +26,12 @@ class SocketIO implements IChatIO {
 
   sendError(message: string): void {
     this.socket.emit("error", message);
+    console.error("Error sent:", message);
   }
 
   sendMessage(message: string): void {
     this.socket.emit("message", message);
+    console.log("Message sent:", message);
   }
 }
 

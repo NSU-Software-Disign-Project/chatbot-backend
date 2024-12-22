@@ -55,7 +55,7 @@ class ChatInterpreter {
     }
 
     // Default переход (если условия не выполнены)
-    const defaultLink = links.find((link) => link.fromPort === "OUT0");
+    const defaultLink = links.find((link) => link.fromPort === "OUT");
     if (defaultLink) {
       this.currentNode = this.nodeMap.get(defaultLink.to)
       this.processNode();

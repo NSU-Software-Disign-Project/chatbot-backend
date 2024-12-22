@@ -2,6 +2,8 @@ import { Server } from "socket.io";
 import { Server as HTTPServer } from "http";
 import { ChatInterpreter } from "../../control/ChatInterpreter";
 import { SocketIO } from "../io/SocketIO";
+import { getProjectConfiguration } from "../../control/db/databaseController";
+import { Model } from "../../entity/BotModel";
 
 export class WebSocketService {
     private io: Server;
@@ -20,11 +22,11 @@ export class WebSocketService {
             console.log("Новое соединение:", socket.id);
 
             const chat = new SocketIO(socket);
-            const model = require('./jsonModel.json');
-            const interpreter = new ChatInterpreter(model, chat);
 
-            socket.on("start", () => {
+            socket.on("start", async (projectName: string) => {
                 try {
+                    const model = await getProjectConfiguration(projectName);
+                    const interpreter = new ChatInterpreter(model, chat);
                     interpreter.start();
                 } catch (error) {
                     console.error("Ошибка при запуске интерпретатора:", error);

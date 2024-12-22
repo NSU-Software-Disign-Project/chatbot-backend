@@ -17,9 +17,11 @@ class ConsoleChatIO implements IChatIO {
   }
 
   // Метод для получения ввода от пользователя
-  getInput(prompt: string, callback: (input: string) => void): void {
-    this.rl.question(prompt, (answer) => {
-      callback(answer);
+  getInput(prompt: string): Promise<string> {
+    return new Promise((resolve) => {
+      this.rl.question(prompt, (answer) => {
+        resolve(answer);
+      });
     });
   }
 
