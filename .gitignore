@@ -61,6 +61,3 @@ pnpm-lock.yaml
 *.tar
 *.rar
 *.7z
-
-# Docker
-docker-compose.yml
