@@ -22,7 +22,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_CONTAINER : process.env.FRONTEND_URL,
   methods: ["GET", "POST", "DELETE", "PUT", "PATCH"]
 }));
 
