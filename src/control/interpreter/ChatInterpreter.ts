@@ -11,8 +11,12 @@ class ChatInterpreter {
     this.model = model;
     this.output = output;
     this.prepareNodeMap();
-    const startNode = model.nodeDataArray.find((node) => node.type === "startBlock");
-    this.currentNode = startNode || undefined;
+    const startNodes = model.nodeDataArray.filter((node) => node.type === "startBlock");
+    if (startNodes.length !== 1) {
+      this.currentNode = undefined;
+    } else {
+      this.currentNode = startNodes[0];
+    }
   }
 
   private checkCondition(
@@ -177,7 +181,7 @@ class ChatInterpreter {
 
   public start(): void {
     if (!this.currentNode) {
-      this.output.sendMessage("Не найден стартовый блок!");
+      this.output.sendMessage("Ошибка: не найден блок старта или их больше одного.");
       this.output.close();
       return;
     }
