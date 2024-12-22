@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { Server as HTTPServer } from "http";
-import { ChatInterpreter } from "../../control/ChatInterpreter";
+import { ChatInterpreter } from "../../control/interpreter/ChatInterpreter";
 import { SocketIO } from "../io/SocketIO";
 import { getProjectConfiguration } from "../../control/db/databaseController";
 import { Model } from "../../entity/BotModel";
@@ -25,7 +25,7 @@ export class WebSocketService {
 
             socket.on("start", async (projectName: string) => {
                 try {
-                    const model = await getProjectConfiguration(projectName);
+                    const model: Model = await getProjectConfiguration(projectName);
                     const interpreter = new ChatInterpreter(model, chat);
                     interpreter.start();
                 } catch (error) {

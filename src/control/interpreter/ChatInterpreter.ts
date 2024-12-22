@@ -1,5 +1,5 @@
-import { LinkData, Model, NodeData } from "../entity/BotModel";
-import { IChatIO } from "../boundary/io/IChatIO";
+import { LinkData, Model, NodeData } from "../../entity/BotModel";
+import { IChatIO } from "../../boundary/io/IChatIO";
 
 class ChatInterpreter {
   private currentNode: NodeData | undefined = undefined;
@@ -96,10 +96,10 @@ class ChatInterpreter {
 
   private interpolateMessage(message: string): string {
     return message.replace(/{(.*?)}/g, (_, varName) => {
-        const value = this.variables.get(varName);
-        return value !== undefined ? String(value) : `{${varName}}`;
+      const value = this.variables.get(varName);
+      return value !== undefined ? String(value) : `{${varName}}`;
     });
-}
+  }
 
   private async moveToNextNode(links: LinkData[]): Promise<void> {
     if (links.length === 1) {
