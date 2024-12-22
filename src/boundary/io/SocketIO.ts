@@ -8,23 +8,30 @@ class SocketIO implements IChatIO {
     this.socket = socket;
   }
 
-  sendMessage(message: string): void {
-    this.socket.emit("message", message);
+  close(): void {
+    this.socket.disconnect(true);
+    console.log("Socket disconnected");
   }
 
-  getInput(prompt: string, callback: (input: string) => void): void {
-    this.socket.emit("requestInput", prompt);
-    this.socket.once("inputResponse", (input: string) => {
-      callback(input);
+  async getInput(prompt: string): Promise<string> {
+    return new Promise((resolve) => {
+      this.socket.emit("requestInput", prompt);
+      console.log("Input requested:", prompt);
+      this.socket.once("inputResponse", (input: string) => {
+        console.log("Input received:", input);
+        resolve(input);
+      });
     });
   }
 
   sendError(message: string): void {
     this.socket.emit("error", message);
+    console.error("Error sent:", message);
   }
 
-  close(): void {
-    this.socket.disconnect(true);
+  sendMessage(message: string): void {
+    this.socket.emit("message", message);
+    console.log("Message sent:", message);
   }
 }
 

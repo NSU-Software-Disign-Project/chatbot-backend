@@ -12,7 +12,7 @@ import {
 } from './services/errorHandler';
 import { shutdownServer } from './services/shutDownServer';
 import { createServer } from 'http';
-import { WebSocketService } from './control/WebSocketService';
+import { WebSocketService } from './boundary/websocket/WebSocketService';
 
 // Initialize
 dotenv.config();
@@ -42,13 +42,15 @@ app.use(serverErrorHandler);
 
 // Start server
 const server = createServer(app);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 const socketServer = new WebSocketService(server);
 socketServer.start();
 
 server.listen(PORT, () => {
   console.log(`Сервер запущен на http://localhost:${PORT}`);
+}).on('error', (err) => {
+  console.error('Ошибка при запуске сервера:', err);
 });
 
 // Graceful shutdown

@@ -1,0 +1,94 @@
+{
+  "class": "GraphLinksModel",
+  "linkFromPortIdProperty": "fromPort",
+  "linkToPortIdProperty": "toPort",
+  "nodeDataArray": [
+    {
+      "key": 0,
+      "category": "startBlock"
+    },
+    {
+      "key": 1,
+      "category": "messageBlock",
+      "message": "Выпить пива"
+    },
+    {
+      "key": 2,
+      "category": "conditionalBlock",
+      "conditions": [
+        {
+          "conditionId": 1,
+          "variableName": "age",
+          "condition": "<",
+          "conditionValue": 18,
+          "portId": "OUT1"
+        },
+        {
+          "conditionId": 2,
+          "variableName": "age",
+          "condition": ">=",
+          "conditionValue": 18,
+          "portId": "OUT"
+        }
+      ]
+    },
+    {
+      "key": 4,
+      "category": "saveBlock",
+      "variableName": "age"
+    },
+    {
+      "key": -6,
+      "category": "messageBlock",
+      "message": "Сколько лет?"
+    },
+    {
+      "key": -7,
+      "category": "messageBlock",
+      "message": "Красава!"
+    },
+    {
+      "key": -8,
+      "category": "messageBlock",
+      "message": "Молодой"
+    }
+  ],
+  "linkDataArray": [
+    {
+      "from": 0,
+      "to": 1,
+      "fromPort": "OUT",
+      "toPort": "IN"
+    },
+    {
+      "from": 1,
+      "to": -6,
+      "fromPort": "OUT",
+      "toPort": "IN"
+    },
+    {
+      "from": -6,
+      "to": 4,
+      "fromPort": "OUT",
+      "toPort": "IN"
+    },
+    {
+      "from": 4,
+      "to": 2,
+      "fromPort": "OUT",
+      "toPort": "IN"
+    },
+    {
+      "from": 2,
+      "to": -7,
+      "fromPort": "OUT",
+      "toPort": "IN"
+    },
+    {
+      "from": 2,
+      "to": -8,
+      "fromPort": "OUT1",
+      "toPort": "IN"
+    }
+  ]
+}

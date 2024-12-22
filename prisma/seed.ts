@@ -1,74 +1,116 @@
 import { PrismaClient } from '@prisma/client';
-import { ObjectId } from 'mongodb';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  try {
-    const project = await prisma.project.create({
-      data: {
-        name: 'Test Project',
-        blocks: {
-          create: [
+  // Создание или обновление проекта с начальными данными
+  const project = await prisma.project.upsert({
+    where: { name: 'Default Project' },
+    update: {},
+    create: {
+      name: 'Default Project',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      nodeDataArray: [
+        {
+          id: 0,
+          type: 'startBlock',
+        },
+        {
+          id: 1,
+          type: 'messageBlock',
+          text: 'Выпить пива',
+        },
+        {
+          id: 2,
+          type: 'conditionalBlock',
+          conditions: [
             {
-              id: new ObjectId().toHexString(),
-              type: 'start',
-              attributes: { text: 'Start Block' },
+              conditionId: 1,
+              variableName: 'age',
+              condition: '<',
+              conditionValue: 18,
+              portId: 'OUT1',
             },
             {
-              id: new ObjectId().toHexString(),
-              type: 'message',
-              attributes: { text: 'Hello, world!' },
-
-            },
-            {
-              id: new ObjectId().toHexString(),
-              type: 'end',
-              attributes: { text: 'End Block' },
+              conditionId: 2,
+              variableName: 'age',
+              condition: '>=',
+              conditionValue: 18,
+              portId: 'OUT',
             },
           ],
         },
-      },
-      include: { blocks: true }
-    });
-
-    const blockIds = project.blocks.map(block => block.id);
-
-    if (blockIds.length < 3) {
-      console.error('Не удалось создать достаточное количество блоков');
-      return;
-    }
-
-
-    await prisma.transition.createMany({
-      data: [
         {
-          id: new ObjectId().toHexString(),
-          fromBlockId: blockIds[0],
-          toBlockId: blockIds[1],
-          condition: {},
-          projectId: project.id,
+          id: 4,
+          type: 'saveBlock',
+          variableName: 'age',
         },
         {
-          id: new ObjectId().toHexString(),
-          fromBlockId: blockIds[1],
-          toBlockId: blockIds[2],
-          condition: {},
-          projectId: project.id,
+          id: -6,
+          type: 'messageBlock',
+          text: 'Сколько лет?',
+        },
+        {
+          id: -7,
+          type: 'messageBlock',
+          text: 'Красава!',
+        },
+        {
+          id: -8,
+          type: 'messageBlock',
+          text: 'Молодой',
         },
       ],
-    });
+      linkDataArray: [
+        {
+          from: 0,
+          to: 1,
+          fromPort: 'OUT',
+          toPort: 'IN',
+        },
+        {
+          from: 1,
+          to: -6,
+          fromPort: 'OUT',
+          toPort: 'IN',
+        },
+        {
+          from: -6,
+          to: 4,
+          fromPort: 'OUT',
+          toPort: 'IN',
+        },
+        {
+          from: 4,
+          to: 2,
+          fromPort: 'OUT',
+          toPort: 'IN',
+        },
+        {
+          from: 2,
+          to: -7,
+          fromPort: 'OUT',
+          toPort: 'IN',
+        },
+        {
+          from: 2,
+          to: -8,
+          fromPort: 'OUT1',
+          toPort: 'IN',
+        },
+      ],
+    },
+  });
 
-
-
-
-    console.log('Seed data created successfully:', project);
-
-  } catch (error) {
-    console.error('Error seeding database:', error);
-  } finally {
-    await prisma.$disconnect();
-  }
+  console.log({ project });
 }
 
-main();
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

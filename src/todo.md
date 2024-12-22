@@ -230,3 +230,7 @@ const result = vm.run(`${userCode}`);
 import asyncHandler from 'express-async-handler';
 
 app.post('/save', asyncHandler(saveConfiguration));
+
+
+docker run -p 8080:8080 --name chatbot-backend-container chatbot-backend
+docker build -t chatbot-backend .
