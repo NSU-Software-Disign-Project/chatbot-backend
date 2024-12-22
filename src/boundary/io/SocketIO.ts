@@ -10,12 +10,15 @@ class SocketIO implements IChatIO {
 
   close(): void {
     this.socket.disconnect(true);
+    console.log("Socket disconnected");
   }
 
-  getInput(prompt: string, callback: (input: string) => void): void {
-    this.socket.emit("requestInput", prompt);
-    this.socket.once("inputResponse", (input: string) => {
-      callback(input);
+  async getInput(prompt: string): Promise<string> {
+    return new Promise((resolve) => {
+      this.socket.emit("requestInput", prompt);
+      this.socket.once("inputResponse", (input: string) => {
+        resolve(input);
+      });
     });
   }
 

@@ -20,11 +20,16 @@ export class WebSocketService {
             console.log("Новое соединение:", socket.id);
 
             const chat = new SocketIO(socket);
-            const model = require('../jsonModel.json');
+            const model = require('./jsonModel.json');
             const interpreter = new ChatInterpreter(model, chat);
 
             socket.on("start", () => {
-                interpreter.start();
+                try {
+                    interpreter.start();
+                } catch (error) {
+                    console.error("Ошибка при запуске интерпретатора:", error);
+                    chat.sendError("Ошибка при запуске интерпретатора.");
+                }
             });
 
             socket.on("disconnect", () => {

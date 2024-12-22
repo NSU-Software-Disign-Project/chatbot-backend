@@ -65,7 +65,7 @@ class ChatInterpreter {
     }
   }
 
-  private handleOptionsBlock(choises: NodeData["choises"], links: LinkData[]): void {
+  private async handleOptionsBlock(choises: NodeData["choises"], links: LinkData[]): Promise<void> {
     if (!choises || choises.length === 0) {
       this.output.sendMessage("Нет вариантов для выбора.");
       this.currentNode = undefined;
@@ -73,7 +73,8 @@ class ChatInterpreter {
     }
 
     const options = choises.map((choice, index) => `${index + 1}. ${choice.text}`).join("\n");
-    this.output.getInput(`Выберите вариант:\n${options}\n`, (input) => {
+    try {
+      const input = await this.output.getInput(`Выберите вариант:\n${options}\n`);
       const choiceIndex = parseInt(input, 10) - 1;
 
       if (choiceIndex >= 0 && choiceIndex < choises.length) {
@@ -88,7 +89,9 @@ class ChatInterpreter {
       }
       this.output.sendMessage("Неверный выбор.");
       this.currentNode = undefined;
-    });
+    } catch (error) {
+      this.output.sendError("Ошибка при обработке выбора.");
+    }
   }
 
   private interpolateMessage(message: string): string {
@@ -98,7 +101,7 @@ class ChatInterpreter {
     });
 }
 
-  private moveToNextNode(links: LinkData[]): void {
+  private async moveToNextNode(links: LinkData[]): Promise<void> {
     if (links.length === 1) {
       this.currentNode = this.nodeMap.get(links[0].to);
       this.processNode();
@@ -108,7 +111,8 @@ class ChatInterpreter {
         return `${index + 1}. ${toNode?.text || "Следующий шаг"}`;
       }).join("\n");
 
-      this.output.getInput(`Выберите действие:\n${options}`, (input) => {
+      try {
+        const input = await this.output.getInput(`Выберите действие:\n${options}`);
         const choiceIndex = parseInt(input, 10) - 1;
 
         if (choiceIndex >= 0 && choiceIndex < links.length) {
@@ -118,7 +122,9 @@ class ChatInterpreter {
           this.output.sendMessage("Неверный выбор.");
           this.currentNode = undefined;
         }
-      });
+      } catch (error) {
+        this.output.sendError("Ошибка при выборе действия.");
+      }
     } else {
       this.output.sendMessage("Нет связей для перехода. Чат завершён.");
       this.output.close();
@@ -132,7 +138,7 @@ class ChatInterpreter {
     });
   }
 
-  private processNode(): void {
+  private async processNode(): Promise<void> {
     if (!this.currentNode) {
       this.output.sendMessage(`Ошибка: не найден блок`);
       return;
@@ -151,10 +157,9 @@ class ChatInterpreter {
         break;
 
       case "saveBlock":
-        this.output.getInput(`Введите значение для "${variableName}": `, (input) => {
-          this.variables.set(variableName!, input);
-          this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
-        });
+        const input = await this.output.getInput(`Введите значение для "${variableName}": `);
+        this.variables.set(variableName!, input);
+        this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
         break;
 
       case "conditionalBlock":
