@@ -18,6 +18,7 @@ services:
       - mongodb
     networks:
       - app-network
+    restart: always
 
   frontend:
     build:
@@ -32,6 +33,7 @@ services:
       - REACT_APP_BACKEND_URL=http://chatbot-editor.ddns.net:3001
     networks:
       - app-network
+    restart: always
 
   mongodb:
     image: mongo:latest
@@ -44,6 +46,7 @@ services:
     command: ["mongod", "--replSet", "rs0"]
     networks:
       - app-network
+    restart: always
 
 volumes:
   mongo-data:
