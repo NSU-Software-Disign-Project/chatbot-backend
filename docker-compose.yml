@@ -3,28 +3,22 @@ version: '3.8'
 services:
   backend:
     build: .
+    container_name: backend
     ports:
       - "8080:8080"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mongodb+srv://new:AfUYEJvW2qGHCKfl@chatbot.uj25s.mongodb.net/expressRestDB?retryWrites=false&connectTimeoutMS=30000&w=majority&appName=chatbot
-      - FRONTEND_URL=http://frontend:3000
-    networks:
-      - default
+      - FRONTEND_URL=http://localhost:3000
 
   frontend:
     build:
       context: ../chatbot-frontend
+    container_name: frontend
     ports:
       - "3000:3000"
     depends_on:
       - backend
     environment:
       - REACT_APP_ENV=production
-      - REACT_APP_BACKEND_ADDR=http://backend:8080
-    networks:
-      - default
-
-networks:
-  default:
-    driver: bridge
+      - REACT_APP_BACKEND_URL=http://localhost:8080
