@@ -8,8 +8,10 @@ services:
       - "8080:8080"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=mongodb+srv://new:AfUYEJvW2qGHCKfl@chatbot.uj25s.mongodb.net/expressRestDB?retryWrites=false&connectTimeoutMS=30000&w=majority&appName=chatbot
+      - DATABASE_URL=mongodb://localhost:27017/expressRestDB?replicaSet=rs0
       - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - mongodb
 
   frontend:
     build:
@@ -22,3 +24,16 @@ services:
     environment:
       - REACT_APP_ENV=production
       - REACT_APP_BACKEND_URL=http://localhost:8080
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./init.js:/docker-entrypoint-initdb.d/init.js:ro
+    command: ["mongod", "--replSet", "rs0"]
+
+volumes:
+  mongo-data:
