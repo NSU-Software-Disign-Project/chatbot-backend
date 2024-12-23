@@ -6,6 +6,8 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mongodb+srv://new:AfUYEJvW2qGHCKfl@chatbot.uj25s.mongodb.net/expressRestDB?retryWrites=false&connectTimeoutMS=30000&w=majority&appName=chatbot
       - FRONTEND_URL=http://frontend:3000
     networks:
       - default
