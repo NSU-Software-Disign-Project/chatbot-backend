@@ -13,7 +13,6 @@ import {
 import { shutdownServer } from './services/shutDownServer';
 import { createServer } from 'http';
 import { WebSocketService } from './boundary/websocket/WebSocketService';
-import { connectToDatabase } from './control/db/database';
 
 // Initialize
 dotenv.config();
@@ -30,8 +29,6 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   methods: ["GET", "POST", "DELETE", "PUT", "PATCH"]
 }));
-
-connectToDatabase();
 
 // Routes
 app.use('/api', configurationRoute);
