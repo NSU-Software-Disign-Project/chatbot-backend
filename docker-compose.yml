@@ -5,8 +5,8 @@ services:
     build: .
     ports:
       - "8080:8080"
-    env_file:
-      - .env
+    environment:
+      - FRONTEND_URL=http://frontend:3000
     networks:
       - default
 
@@ -17,8 +17,9 @@ services:
       - "3000:3000"
     depends_on:
       - backend
-    env_file:
-      - .env
+    environment:
+      - REACT_APP_ENV=production
+      - REACT_APP_BACKEND_ADDR=http://backend:8080
     networks:
       - default
 

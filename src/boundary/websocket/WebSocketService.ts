@@ -11,9 +11,7 @@ export class WebSocketService {
     constructor(httpServer: HTTPServer) {
         this.io = new Server(httpServer, {
             cors: {
-                origin: process.env.NODE_ENV === 'production' 
-                        ? process.env.FRONTEND_CONTAINER 
-                        : process.env.FRONTEND_URL,
+                origin: process.env.FRONTEND_URL || "http://localhost:3000",
                 methods: ["GET", "POST"]
             }
         });
