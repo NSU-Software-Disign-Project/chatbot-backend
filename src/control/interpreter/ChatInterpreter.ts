@@ -48,6 +48,8 @@ class ChatInterpreter {
       const variableValue = this.variables.get(condition.variableName);
       const conditionMet = this.checkCondition(variableValue, condition.condition, condition.conditionValue);
 
+      console.log(`Condition: ${condition.variableName} ${condition.condition} ${condition.conditionValue} = ${conditionMet}`);
+
       if (conditionMet) {
         const nextLink = links.find((link) => link.fromPort === condition.portId);
         if (nextLink) {
@@ -148,7 +150,7 @@ class ChatInterpreter {
       return;
     }
 
-    const { type, text, variableName, variableValue, conditions, choises } = this.currentNode;
+    const { type, text, variableName, conditions, choises } = this.currentNode;
 
     switch (type) {
       case "startBlock":
