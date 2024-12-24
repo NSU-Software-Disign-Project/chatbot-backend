@@ -1,8 +1,10 @@
-chatbot-editor.ddns.net {
+chatbot-editor.ddns.net, localhost {
     reverse_proxy /api/* backend:8080
+    reverse_proxy /socket.io/* backend:8080
     reverse_proxy /* frontend:3000
 
     tls {
-        on_demand
+        # issuer acme
+        on_demand        
     }
 }

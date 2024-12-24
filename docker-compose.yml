@@ -9,7 +9,7 @@ services:
     image: caddy:latest
     container_name: caddy
     ports:
-      - "80:80"
+      - "3000:80"
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -26,7 +26,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mongodb://mongodb:27017/expressRestDB?replicaSet=rs0&directConnection=true
-      - FRONTEND_URL=http://chatbot-editor.ddns.net
+      # - FRONTEND_URL=https://localhost
+      - FRONTEND_URL=http://chatbot-editor.ddns.net:3000
     networks:
       - app-network
     restart: always
@@ -37,7 +38,8 @@ services:
     container_name: frontend
     environment:
       - REACT_APP_ENV=production
-      - REACT_APP_BACKEND_URL=http://chatbot-editor.ddns.net/api
+      # - REACT_APP_BACKEND_URL=https://localhost
+      - REACT_APP_BACKEND_URL=http://chatbot-editor.ddns.net:3000
     networks:
       - app-network
     restart: always
@@ -45,8 +47,6 @@ services:
   mongodb:
     image: mongo:latest
     container_name: mongodb
-    ports:
-      - "3002:27017"
     volumes:
       - mongo-data:/data/db
       - ./init.js:/docker-entrypoint-initdb.d/init.js:ro

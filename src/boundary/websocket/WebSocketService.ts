@@ -11,8 +11,8 @@ export class WebSocketService {
     constructor(httpServer: HTTPServer) {
         this.io = new Server(httpServer, {
             cors: {
-                origin: process.env.FRONTEND_URL || "http://chatbot-editor.ddns.net",
-                methods: ["GET", "POST"]
+                origin: "*",
+                methods: ["GET", "POST", "DELETE", "PUT", "PATCH"]
             }
         });
     }
