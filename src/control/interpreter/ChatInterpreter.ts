@@ -104,11 +104,11 @@ class ChatInterpreter {
     try {
       const response = await fetch(`/external-api${url}`);
       const data = await response.json();
-      const clinicsList = data.clinics.map((clinic: any) => clinic.name).join(", ");
+      const clinicsList = data.clinics.map((clinic: any) => clinic.name).join("\n");
       this.variables.set(variableName, clinicsList);
       this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
     } catch (error) {
-      this.output.sendError("Ошибка при запросе к API.");
+      this.output.sendError(`Ошибка при запросе к API. ${error}`);
       this.currentNode = undefined;
     }
   }

@@ -8,6 +8,7 @@ export function jsonToNodeData(data: any): NodeData {
     text: data.text,
     variableName: data.variableName,
     variableValue: data.variableValue,
+    url: data.url,
     conditions: data.conditions?.map((condition: any) => ({
       conditionId: condition.conditionId,
       variableName: condition.variableName,
