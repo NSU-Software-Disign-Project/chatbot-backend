@@ -5,17 +5,28 @@ networks:
     driver: bridge
 
 services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - app-network
+    restart: always
+
   backend:
     build: .
     container_name: backend
-    ports:
-      - "3001:8080"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mongodb://mongodb:27017/expressRestDB?replicaSet=rs0&directConnection=true
-      - FRONTEND_URL=http://chatbot-editor.ddns.net:3000
-    depends_on:
-      - mongodb
+      - FRONTEND_URL=http://chatbot-editor.ddns.net
     networks:
       - app-network
     restart: always
@@ -24,13 +35,9 @@ services:
     build:
       context: ../chatbot-frontend
     container_name: frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
     environment:
       - REACT_APP_ENV=production
-      - REACT_APP_BACKEND_URL=http://chatbot-editor.ddns.net:3001
+      - REACT_APP_BACKEND_URL=http://chatbot-editor.ddns.net/api
     networks:
       - app-network
     restart: always
