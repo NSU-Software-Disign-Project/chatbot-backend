@@ -9,10 +9,12 @@ services:
     image: caddy:latest
     container_name: caddy
     ports:
-      - "3000:80"
-      - "443:443"
+      - "3455:80"
+      - "3456:443"  
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - backend
       - frontend
@@ -27,7 +29,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=mongodb://mongodb:27017/expressRestDB?replicaSet=rs0&directConnection=true
       # - FRONTEND_URL=https://localhost
-      - FRONTEND_URL=http://chatbot-editor.ddns.net:3000
+      - FRONTEND_URL=http://chatbot-editor.ddns.net:3455
     networks:
       - app-network
     restart: always
@@ -39,7 +41,7 @@ services:
     environment:
       - REACT_APP_ENV=production
       # - REACT_APP_BACKEND_URL=https://localhost
-      - REACT_APP_BACKEND_URL=http://chatbot-editor.ddns.net:3000
+      - REACT_APP_BACKEND_URL=http://chatbot-editor.ddns.net:3455
     networks:
       - app-network
     restart: always
@@ -57,3 +59,5 @@ services:
 
 volumes:
   mongo-data:
+  caddy_data:
+  caddy_config:

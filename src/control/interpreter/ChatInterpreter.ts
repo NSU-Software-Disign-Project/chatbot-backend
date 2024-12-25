@@ -100,10 +100,24 @@ class ChatInterpreter {
     }
   }
 
+  private async handleApiBlock(url: string, variableName: string): Promise<void> {
+    try {
+      const decodedUrl = decodeURIComponent(url);
+      const response = await fetch(decodedUrl);
+      const data = await response.json();
+      const clinicsList = data.clinics.map((clinic: any, index: number) => `${index + 1}. ${clinic.name}`).join("\n");
+      this.variables.set(variableName, clinicsList);
+      this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
+    } catch (error) {
+      this.output.sendError(`Ошибка при запросе к API. ${error}`);
+      this.currentNode = undefined;
+    }
+  }
+
   private interpolateMessage(message: string): string {
-    return message.replace(/{(.*?)}/g, (_, varName) => {
+    return message.replace(/\$\{(.*?)\}/g, (_, varName) => {
       const value = this.variables.get(varName);
-      return value !== undefined ? String(value) : `{${varName}}`;
+      return value !== undefined ? String(value) : `\${${varName}}`;
     });
   }
 
@@ -132,7 +146,7 @@ class ChatInterpreter {
         this.output.sendError("Ошибка при выборе действия.");
       }
     } else {
-      this.output.sendMessage("Нет связей для перехода. Чат завершён.");
+      // this.output.sendMessage("Нет связей для перехода. Чат завершён.");
       this.output.close();
       this.currentNode = undefined;
     }
@@ -150,7 +164,7 @@ class ChatInterpreter {
       return;
     }
 
-    const { type, text, variableName, conditions, choises } = this.currentNode;
+    const { type, text, variableName, conditions, choises, url } = this.currentNode;
 
     switch (type) {
       case "startBlock":
@@ -174,6 +188,15 @@ class ChatInterpreter {
 
       case "optionsBlock":
         this.handleOptionsBlock(choises, this.getLinksFromNode(this.currentNode.id));
+        break;
+
+      case "apiBlock":
+        if (url && variableName) {
+          await this.handleApiBlock(url, variableName);
+        } else {
+          this.output.sendMessage("Ошибка: отсутствует URL или имя переменной в API блоке.");
+          this.currentNode = undefined;
+        }
         break;
 
       default:
