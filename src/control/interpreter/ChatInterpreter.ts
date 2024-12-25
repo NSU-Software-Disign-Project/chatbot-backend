@@ -102,7 +102,8 @@ class ChatInterpreter {
 
   private async handleApiBlock(url: string, variableName: string): Promise<void> {
     try {
-      const response = await fetch(`/external-api?url=${encodeURIComponent(url)}`);
+      const decodedUrl = decodeURIComponent(url);
+      const response = await fetch(decodedUrl);
       const data = await response.json();
       const clinicsList = data.clinics.map((clinic: any, index: number) => `${index + 1}. ${clinic.name}`).join("\n");
       this.variables.set(variableName, clinicsList);
@@ -145,7 +146,7 @@ class ChatInterpreter {
         this.output.sendError("Ошибка при выборе действия.");
       }
     } else {
-      this.output.sendMessage("Нет связей для перехода. Чат завершён.");
+      // this.output.sendMessage("Нет связей для перехода. Чат завершён.");
       this.output.close();
       this.currentNode = undefined;
     }
