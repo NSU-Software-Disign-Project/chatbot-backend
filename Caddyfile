@@ -1,20 +1,15 @@
-chatbot-editor.ddns.net, localhost {
+{
+    auto_https off
+}
+
+http://chatbot-editor.ddns.net {
     reverse_proxy /api/* backend:8080
     reverse_proxy /socket.io/* backend:8080
     reverse_proxy /* frontend:3000
+}
 
-    tls {
-        # issuer acme
-        on_demand        
-    }
-
-    handle_path /external-api/* {
-        uri strip_prefix /external-api
-        reverse_proxy {http.request.uri} {
-            header_up Host {http.reverse_proxy.upstream.hostport}
-            header_up X-Real-IP {http.reverse_proxy.upstream.address}
-            header_up X-Forwarded-For {http.reverse_proxy.upstream.address}
-            header_up X-Forwarded-Proto {http.reverse_proxy.upstream.proto}
-        }
-    }
+https://chatbot-editor.ddns.net {
+    reverse_proxy /api/* backend:8080
+    reverse_proxy /socket.io/* backend:8080
+    reverse_proxy /* frontend:3000
 }

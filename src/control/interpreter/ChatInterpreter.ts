@@ -102,7 +102,7 @@ class ChatInterpreter {
 
   private async handleApiBlock(url: string, variableName: string): Promise<void> {
     try {
-      const response = await fetch(`/external-api${url}`);
+      const response = await fetch(`/external-api?url=${encodeURIComponent(url)}`);
       const data = await response.json();
       const clinicsList = data.clinics.map((clinic: any) => clinic.name).join("\n");
       this.variables.set(variableName, clinicsList);
