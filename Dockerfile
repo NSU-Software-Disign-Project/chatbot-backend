@@ -10,9 +10,6 @@ COPY package*.json ./
 # Устанавливаем зависимости
 RUN npm install
 
-# Копируем файл .env
-COPY .env .env
-
 # Копируем исходный код
 COPY . .
 

@@ -11,8 +11,8 @@ export class WebSocketService {
     constructor(httpServer: HTTPServer) {
         this.io = new Server(httpServer, {
             cors: {
-                origin: "http://localhost:3000",
-                methods: ["GET", "POST"]
+                origin: "*",
+                methods: ["GET", "POST", "DELETE", "PUT", "PATCH"]
             }
         });
     }

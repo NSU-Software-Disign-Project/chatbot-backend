@@ -16,14 +16,19 @@ import { WebSocketService } from './boundary/websocket/WebSocketService';
 
 // Initialize
 dotenv.config();
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+
 const prisma = new PrismaClient();
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST", "DELETE", "PUT", "PATCH"]
+  origin: process.env.FRONTEND_URL || 'https://chatbot-editor.ddns.net',
+  methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
+  credentials: true
 }));
 
 // Routes

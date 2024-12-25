@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './database';
 import { Model } from '../../entity/BotModel';
 import { jsonToNodeData, jsonToLinkData } from './jsonToModel';
-
-const prisma = new PrismaClient();
 
 // Сохранение или обновление проекта
 export async function upsertProject(data: any) {
@@ -36,7 +34,7 @@ export async function getAllProjects() {
 
 // Получение проекта по имени
 export async function getProjectByName(name: string) {
-  return prisma.project.findFirst({
+  return prisma.project.findUnique({
     where: { name },
   });
 }

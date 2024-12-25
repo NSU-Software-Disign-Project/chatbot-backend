@@ -4,6 +4,7 @@ interface NodeData {
   text?: string;
   variableName?: string;
   variableValue?: string | number | boolean;
+  url?: string;
   conditions?: {
     conditionId: number;
     variableName: string;
