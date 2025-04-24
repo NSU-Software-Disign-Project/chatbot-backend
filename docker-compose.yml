@@ -9,8 +9,8 @@ services:
     image: caddy:latest
     container_name: caddy
     ports:
-      - "8080:80"
-      - "44343:443"
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -29,10 +29,9 @@ services:
     build: .
     container_name: backend
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-development}
       - DATABASE_URL=mongodb://mongodb:27017/expressRestDB?replicaSet=rs0&directConnection=true
-      # - FRONTEND_URL=https://localhost
-      - FRONTEND_URL=https://chatbot-editor.ddns.net
+      - FRONTEND_URL=${FRONTEND_URL:-https://localhost}
     networks:
       - app-network
     restart: always
@@ -42,9 +41,8 @@ services:
       context: ../chatbot-frontend
     container_name: frontend
     environment:
-      - REACT_APP_ENV=production
-      # - REACT_APP_BACKEND_URL=https://localhost
-      - REACT_APP_BACKEND_URL=https://chatbot-editor.ddns.net
+      - REACT_APP_ENV=${NODE_ENV:-development}}
+      - REACT_APP_BACKEND_URL=${BACKEND_URL:-https://localhost}
     networks:
       - app-network
     restart: always
@@ -55,7 +53,7 @@ services:
     volumes:
       - mongo-data:/data/db
       - ./init.js:/docker-entrypoint-initdb.d/init.js:ro
-    command: ["mongod", "--replSet", "rs0"]
+    command: [ "mongod", "--replSet", "rs0" ]
     networks:
       - app-network
     restart: always
