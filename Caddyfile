@@ -1,3 +1,4 @@
+
 chatbot-editor.ddns.net {
     reverse_proxy /api/* backend:8080
     reverse_proxy /socket.io/* backend:8080
