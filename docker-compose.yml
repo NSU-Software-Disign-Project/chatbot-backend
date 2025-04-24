@@ -41,7 +41,7 @@ services:
       context: ../chatbot-frontend
     container_name: frontend
     environment:
-      - REACT_APP_ENV=${NODE_ENV:-development}}
+      - REACT_APP_ENV=${NODE_ENV:-development}
       - REACT_APP_BACKEND_URL=${BACKEND_URL:-https://localhost}
     networks:
       - app-network
