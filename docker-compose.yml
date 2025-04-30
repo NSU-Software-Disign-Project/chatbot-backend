@@ -13,8 +13,8 @@ services:
       - "${CADDY_HTTPS_PORT:-443}:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+      - caddy-data:/data
+      - caddy-config:/config
     depends_on:
       - backend
       - frontend
@@ -52,6 +52,7 @@ services:
     container_name: mongodb
     volumes:
       - mongo-data:/data/db
+      - mongo-config:/data/configdb
       - ./init.js:/docker-entrypoint-initdb.d/init.js:ro
     command: [ "mongod", "--replSet", "rs0" ]
     networks:
@@ -60,5 +61,6 @@ services:
 
 volumes:
   mongo-data:
-  caddy_data:
-  caddy_config:
+  mongo-config:
+  caddy-data:
+  caddy-config:
