@@ -13,6 +13,7 @@ import {
 import { shutdownServer } from './services/shutDownServer';
 import { createServer } from 'http';
 import { WebSocketService } from './boundary/websocket/WebSocketService';
+import authRoute from './boundary/routes/authRoute';
 
 // Initialize
 dotenv.config();
@@ -33,6 +34,7 @@ app.use(cors({
 
 // Routes
 app.use('/api', configurationRoute);
+app.use('/auth', authRoute);
 
 // Обработка ошибок Prisma
 app.use(prismaErrorHandler);

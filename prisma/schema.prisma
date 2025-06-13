@@ -15,4 +15,17 @@ model Project {
   updatedAt     DateTime     @updatedAt
   nodeDataArray Json[]
   linkDataArray Json[]
+  ownerId       String?       @db.ObjectId
+
+  // массив объектов: { userId: String, permission: String }
+  sharedWith    Json[]
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  googleId  String?  @unique
+  password  String?
+  name      String?
+  createdAt DateTime @default(now())
 }

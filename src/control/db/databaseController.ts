@@ -61,3 +61,11 @@ export async function getProjectConfiguration(name: string): Promise<Model> {
     linkDataArray: project.linkDataArray.map(jsonToLinkData),
   };
 }
+
+export async function getProjectsByOwnerId(ownerId: string) {
+  return prisma.project.findMany({ where: { ownerId } });
+}
+
+export async function getUserById(id: string) {
+  return prisma.user.findUnique({ where: { id } });
+}
