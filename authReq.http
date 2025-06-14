@@ -1,0 +1,26 @@
+### Регистрация пользователя
+POST http://localhost:8080/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "name": "Test User",
+  "password": "testpassword"
+}
+
+### Авторизация (логин)
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "testpassword"
+}
+
+### Получение информации о себе (замените <token> на ваш токен)
+GET http://localhost:8080/user/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODRkNDE5MzkyN2EyOTY4MjkxZDE5YWIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ5ODkzNTUyLCJleHAiOjE3NTA0OTgzNTJ9.TueHFOeYzSchLVqAQBiToRm-1UDO8qykpB_-qVcWP1I
+
+### Получение своих проектов (замените <token> на ваш токен)
+GET http://localhost:8080/user/my-projects
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODRkNDE5MzkyN2EyOTY4MjkxZDE5YWIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ5ODkzNTUyLCJleHAiOjE3NTA0OTgzNTJ9.TueHFOeYzSchLVqAQBiToRm-1UDO8qykpB_-qVcWP1I
