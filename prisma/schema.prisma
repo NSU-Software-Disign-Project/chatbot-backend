@@ -8,11 +8,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  email     String    @unique
+  name      String
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+  sharedProjects ProjectShare[]
+}
+
 model Project {
   id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  projectId     String?      @unique // Re-add @unique after migration
   name          String       @unique
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   nodeDataArray Json[]
   linkDataArray Json[]
+  userId        String       @db.ObjectId
+  user          User         @relation(fields: [userId], references: [id])
+  shares        ProjectShare[]
+  isPublic      Boolean      @default(false) // Public projects can be viewed by anyone
+  canEdit       Boolean      @default(false) // Public projects can be edited by anyone
+  // New fields for Google Docs style sharing
+  isCollaborative Boolean    @default(false) // Anyone with link can edit
+  shareToken     String?     @unique // Unique token for sharing (like Google Docs)
+  anonymousUsers Json[]      // Store anonymous user sessions
+}
+
+model ProjectShare {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId String   @db.ObjectId
+  userId    String   @db.ObjectId
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission String  @default("view") // "view", "edit", "admin"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, userId])
 }
