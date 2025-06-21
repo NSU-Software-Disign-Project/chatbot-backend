@@ -2,6 +2,7 @@ import { prisma } from '../control/db/database';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { ApiError } from './ApiError';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
@@ -23,43 +24,52 @@ function formatZodErrors(errors: z.ZodIssue[]) {
 export async function registerUser({ email, name, password }: { email: string, name?: string, password: string }) {
   const parsed = registerSchema.safeParse({ email, name, password });
   if (!parsed.success) {
-    throw new Error('Ошибка валидации: ' + formatZodErrors(parsed.error.issues));
+    throw new ApiError(400, 'Ошибка валидации: ' + formatZodErrors(parsed.error.issues));
   }
 
   try {
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      throw new Error('Пользователь с таким email уже зарегистрирован');
-    }
     const hash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, name, password: hash }
+      data: { email, name, password: hash },
     });
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   } catch (err: any) {
-    if (err.code === 'P2002') {
-      throw new Error('Email уже используется');
+    // Логируем полную ошибку на сервере для отладки
+    console.error("Internal error during user registration:", err);
+
+    // P2002 - это код ошибки Prisma для нарушения уникального ограничения
+    if (err.code === 'P2002' && err.meta?.target?.includes('email')) {
+      throw new ApiError(409, 'Этот email уже используется');
     }
-    throw new Error('Ошибка регистрации: ' + (err.message || err));
+
+    // Перебрасываем более информативную ошибку для клиента
+    const message = err.message || 'Неизвестная ошибка сервера';
+    throw new ApiError(500, `Ошибка регистрации: ${message}`);
   }
 }
 
 export async function authenticateUser({ email, password }: { email: string, password: string }) {
   const parsed = loginSchema.safeParse({ email, password });
   if (!parsed.success) {
-    throw new Error('Ошибка валидации: ' + formatZodErrors(parsed.error.issues));
+    throw new ApiError(400, 'Ошибка валидации: ' + formatZodErrors(parsed.error.issues));
   }
   try {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) throw new Error('Пользователь не найден');
-    if (!user.password) throw new Error('У пользователя не установлен пароль');
+    if (!user || !user.password) {
+      throw new ApiError(401, 'Неверный email или пароль');
+    }
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) throw new Error('Неверный пароль');
+    if (!valid) {
+      throw new ApiError(401, 'Неверный email или пароль');
+    }
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
     const { password: _, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
   } catch (err: any) {
-    throw new Error('Ошибка авторизации: ' + (err.message || err));
+    if (err instanceof ApiError) {
+      throw err;
+    }
+    throw new ApiError(500, 'Ошибка авторизации на сервере');
   }
 }

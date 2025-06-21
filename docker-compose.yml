@@ -30,7 +30,7 @@ services:
     container_name: backend
     environment:
       - NODE_ENV=${NODE_ENV:-development}
-      - DATABASE_URL=mongodb://mongodb:27017/expressRestDB?replicaSet=rs0&directConnection=true
+      - DATABASE_URL=mongodb://mongodb:27017/expressRestDB?replicaSet=rs0&directConnection=true&connectTimeoutMS=5000
       - FRONTEND_URL=${FRONTEND_URL:-https://localhost}
     networks:
       - app-network

@@ -1,34 +1,34 @@
 import express from 'express';
 import { registerUser, authenticateUser } from '../../services/authentication';
+import { authenticateJWT, logoutJWT } from '../../services/jwt';
 
 const router = express.Router();
 
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   try {
     const { email, name, password } = req.body;
     const user = await registerUser({ email, name, password });
-    res.json({ user });
+    
+    const { token } = await authenticateUser({ email, password });
+    
+    res.status(201).json({ user, token });
   } catch (e) {
-    if (e instanceof Error) {
-      res.status(400).json({ error: e.message });
-    } else {
-      res.status(400).json({ error: 'Unknown error' });
-    }
+    next(e);
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const { user, token } = await authenticateUser({ email, password });
     res.json({ user, token });
   } catch (e) {
-    if (e instanceof Error) {
-      res.status(401).json({ error: e.message });
-    } else {
-      res.status(401).json({ error: 'Unknown error' });
-    }
+    // передаем ошибку в централизованный обработчик
+    next(e);
   }
 });
+
+// Новый endpoint для logout
+router.post('/logout', authenticateJWT, logoutJWT);
 
 export default router;
