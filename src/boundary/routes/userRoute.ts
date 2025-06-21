@@ -14,20 +14,19 @@ router.get('/my-projects', authenticateJWT, async (req, res) => {
   }
 });
 
-router.get('/me', authenticateJWT, (req, res) => {
+router.get('/me', authenticateJWT, async (req, res) => {
   const userId = (req as any).user.userId;
-  getUserById(userId)
-    .then(user => {
-      if (!user) {
-        res.status(404).json({ error: 'User not found' });
-        return;
-      }
-      const { password, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
-    })
-    .catch(() => {
-      res.status(500).json({ error: 'Failed to fetch user' });
-    });
+  try {
+    const user = await getUserById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const { password, ...userWithoutPassword } = user;
+    res.json({ user: userWithoutPassword });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
 });
 
 export default router;
