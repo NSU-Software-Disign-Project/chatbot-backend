@@ -93,26 +93,29 @@ class ChatInterpreter {
   }
 
   private async handleOptionsBlock(
-    choises: NodeData['choises'],
+    options: NodeData['options'],
     links: LinkData[],
   ): Promise<void> {
-    if (!choises || choises.length === 0) {
+    if (!options || options.length === 0) {
       this.output.sendMessage('Нет вариантов для выбора.');
       this.currentNode = undefined;
       return;
     }
 
-    const options = choises
-      .map((choice, index) => `${index + 1}. ${choice.text}`)
+    const optionsText = options
+      .map(
+        (option: { text: string; portId: string }, index: number) =>
+          `${index + 1}. ${option.text}`,
+      )
       .join('\n');
     try {
       const input = await this.output.getInput(
-        `Выберите вариант:\n${options}\n`,
+        `Выберите вариант:\n${optionsText}\n`,
       );
       const choiceIndex = parseInt(input, 10) - 1;
 
-      if (choiceIndex >= 0 && choiceIndex < choises.length) {
-        const chosenOption = choises[choiceIndex];
+      if (choiceIndex >= 0 && choiceIndex < options.length) {
+        const chosenOption = options[choiceIndex];
         const nextLink = links.find(
           (link) => link.fromPort === chosenOption.portId,
         );
@@ -203,7 +206,7 @@ class ChatInterpreter {
       return;
     }
 
-    const { type, text, variableName, conditions, choises, url } =
+    const { type, text, variableName, conditions, options, url } =
       this.currentNode;
 
     switch (type) {
@@ -233,7 +236,7 @@ class ChatInterpreter {
 
       case 'optionsBlock':
         this.handleOptionsBlock(
-          choises,
+          options,
           this.getLinksFromNode(this.currentNode.id),
         );
         break;

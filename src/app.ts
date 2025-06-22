@@ -32,7 +32,7 @@ app.use(
 );
 
 // Резервное промежуточное ПО для парсинга text/plain как JSON
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   if (
     req.headers['content-type'] &&
     req.headers['content-type'].startsWith('text/plain')
@@ -53,7 +53,7 @@ app.use((req, res, next) => {
 });
 
 // Конечная точка проверки состояния
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -79,7 +79,7 @@ app.use('/auth', authRoute);
 app.use(prismaErrorHandler);
 
 // 404
-app.use((req: Request, res: Response) => {
+app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: 'Route not found' });
 });
 

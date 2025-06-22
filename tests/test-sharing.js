@@ -146,7 +146,7 @@ async function testProjectCreation() {
 
 // Test project sharing
 async function testProjectSharing() {
-  console.log('\n🤝 Testing project sharing...');
+  console.log('\nTesting project sharing...');
 
   try {
     const shareData = {
@@ -336,7 +336,7 @@ async function runAllTests() {
     console.log('   ✅ Project access control');
     console.log('   ✅ Shareable project retrieval');
   } catch (error) {
-    console.error('\n💥 Test suite failed:', error.message);
+    console.error('\nTest suite failed:', error.message);
     process.exit(1);
   }
 }

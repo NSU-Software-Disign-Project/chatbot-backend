@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import {
   upsertProject,
   getAllProjects,
-  getProjectByName,
   deleteProjectByName,
   getProjectConfiguration,
   shareProject,
@@ -48,7 +47,10 @@ export async function saveProjectConfiguration(
 }
 
 // Получение всех проектов
-export async function getAllProjectConfigurations(req: Request, res: Response) {
+export async function getAllProjectConfigurations(
+  _req: Request,
+  res: Response,
+) {
   try {
     console.log('Вызов getAllProjectConfigurations');
     const projects = await getAllProjects();
@@ -351,7 +353,7 @@ export async function createCollaborativeProjectController(
         isCollaborative: true,
         shareToken,
         anonymousUsers: [],
-      },
+      } as any,
     });
 
     res.status(201).json({
@@ -379,6 +381,8 @@ export async function getCollaborativeProjectController(
   try {
     const { shareToken } = req.params;
 
+    console.log(`REST API: Loading project data for shareToken: ${shareToken}`);
+
     if (!shareToken) {
       res.status(400).json({ message: 'Share token is required' });
       return;
@@ -394,18 +398,28 @@ export async function getCollaborativeProjectController(
             email: true,
           },
         },
-      },
+      } as any,
     });
 
     if (!project) {
+      console.log(`REST API: Project not found for shareToken: ${shareToken}`);
       res.status(404).json({ message: 'Project not found' });
       return;
     }
 
-    if (!project.isCollaborative) {
+    if (!(project as any).isCollaborative) {
+      console.log(
+        `REST API: Project is not collaborative for shareToken: ${shareToken}`,
+      );
       res.status(403).json({ message: 'This project is not collaborative' });
       return;
     }
+
+    console.log(
+      `REST API: Returning project data with ${(project as any).nodeDataArray?.length || 0} nodes and ${(project as any).linkDataArray?.length || 0} links`,
+    );
+    console.log('REST API: nodeDataArray:', (project as any).nodeDataArray);
+    console.log('REST API: linkDataArray:', (project as any).linkDataArray);
 
     res.status(200).json({
       message: 'Project retrieved successfully',
@@ -443,20 +457,64 @@ export async function updateCollaborativeProjectController(
       return;
     }
 
-    if (!project.isCollaborative) {
+    if (!(project as any).isCollaborative) {
       res.status(403).json({ message: 'This project is not collaborative' });
       return;
     }
 
+    // Reject saves that only contain placeholder nodes (like 1-2-3, or only a startBlock with no other blocks)
+    const validBlockTypes = [
+      'startBlock',
+      'messageBlock',
+      'apiBlock',
+      'conditionalBlock',
+      'optionsBlock',
+      'saveBlock',
+    ];
+    const isValidNode = (n: any) => {
+      const isValid =
+        n &&
+        n.type &&
+        validBlockTypes.includes(n.type) &&
+        (typeof n.id === 'number' || typeof n.id === 'string') &&
+        n.id !== undefined &&
+        n.id !== null;
+      if (!isValid) {
+        console.warn('Invalid node detected:', n);
+      }
+      return isValid;
+    };
+
+    console.log('Received nodeDataArray:', nodeDataArray);
+    console.log('Received linkDataArray:', linkDataArray);
+
+    const hasValidNodes =
+      Array.isArray(nodeDataArray) &&
+      nodeDataArray.length > 0 &&
+      nodeDataArray.some(isValidNode);
+
+    if (!hasValidNodes) {
+      console.warn('Rejected save: no valid nodes received:', nodeDataArray);
+      res
+        .status(400)
+        .json({ message: 'Project must contain at least one valid block.' });
+      return;
+    }
+
+    // Filter out any invalid nodes before saving
+    const filteredNodeDataArray = nodeDataArray.filter(isValidNode);
+    console.log('Saving filtered nodes:', filteredNodeDataArray);
+
     const updatedProject = await prisma.project.update({
       where: { id: project.id },
       data: {
-        nodeDataArray: nodeDataArray || project.nodeDataArray,
-        linkDataArray: linkDataArray || project.linkDataArray,
+        nodeDataArray: filteredNodeDataArray,
+        linkDataArray: linkDataArray || (project as any).linkDataArray,
         updatedAt: new Date(),
-      },
+      } as any,
     });
 
+    console.log('Project updated successfully:', updatedProject);
     res.status(200).json({
       message: 'Project updated successfully',
       data: updatedProject,
@@ -465,6 +523,59 @@ export async function updateCollaborativeProjectController(
     console.error('Error updating collaborative project:', error);
     res.status(500).json({
       message: 'Failed to update project',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
+
+// Delete collaborative project (auth required - only owner can delete)
+export async function deleteCollaborativeProjectController(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const { projectId } = req.params;
+    const userId = (req as any).user?.userId;
+
+    if (!projectId) {
+      res.status(400).json({ message: 'Project ID is required' });
+      return;
+    }
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    // Find the project and verify ownership
+    const project = await prisma.project.findFirst({
+      where: { projectId } as any,
+    });
+
+    if (!project) {
+      res.status(404).json({ message: 'Project not found' });
+      return;
+    }
+
+    if (project.userId !== userId) {
+      res
+        .status(403)
+        .json({ message: 'Only project owner can delete the project' });
+      return;
+    }
+
+    // Delete the project
+    await prisma.project.delete({
+      where: { id: project.id },
+    });
+
+    res.status(200).json({
+      message: 'Project deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting collaborative project:', error);
+    res.status(500).json({
+      message: 'Failed to delete project',
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }

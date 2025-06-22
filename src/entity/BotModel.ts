@@ -12,8 +12,7 @@ interface NodeData {
     conditionValue: string | number | boolean;
     portId: string;
   }[];
-  choises?: {
-    choiseId: number;
+  options?: {
     text: string;
     portId: string;
   }[];

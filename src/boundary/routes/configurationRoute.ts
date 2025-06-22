@@ -1,10 +1,8 @@
 import { Router } from 'express';
 import {
   saveProjectConfiguration,
-  getAllProjectConfigurations,
   getProjectConfigurationByName,
   deleteProjectConfiguration,
-  getActiveUsersInProject,
   shareProjectController,
   getAccessibleProjectsController,
   getProjectByShareableIdController,
@@ -12,6 +10,7 @@ import {
   createCollaborativeProjectController,
   getCollaborativeProjectController,
   updateCollaborativeProjectController,
+  deleteCollaborativeProjectController,
 } from '../../control/api/configurationController';
 import { authMiddleware } from '../../services/authMiddleware';
 
@@ -40,7 +39,6 @@ router.get(
   checkProjectAccessController,
 );
 
-// Collaborative editing routes (Google Docs style)
 router.post(
   '/collaborative/project',
   authMiddleware,
@@ -53,6 +51,11 @@ router.get(
 router.put(
   '/collaborative/project/:shareToken',
   updateCollaborativeProjectController,
+);
+router.delete(
+  '/collaborative/project/:projectId',
+  authMiddleware,
+  deleteCollaborativeProjectController,
 );
 
 export default router;

@@ -176,6 +176,8 @@ export async function getUserAccessibleProjects(userId: string) {
       updatedAt: true,
       isPublic: true,
       canEdit: true,
+      isCollaborative: true,
+      shareToken: true,
       user: {
         select: {
           id: true,
@@ -199,6 +201,8 @@ export async function getUserAccessibleProjects(userId: string) {
           updatedAt: true,
           isPublic: true,
           canEdit: true,
+          isCollaborative: true,
+          shareToken: true,
           user: {
             select: {
               id: true,

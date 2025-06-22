@@ -16,10 +16,9 @@ export function jsonToNodeData(data: any): NodeData {
       conditionValue: condition.conditionValue,
       portId: condition.portId,
     })),
-    choises: data.choises?.map((choise: any) => ({
-      choiseId: choise.choiseId,
-      text: choise.text,
-      portId: choise.portId,
+    options: data.options?.map((option: any) => ({
+      text: option.text,
+      portId: option.portId,
     })),
   };
 }

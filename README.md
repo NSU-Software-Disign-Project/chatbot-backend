@@ -7,7 +7,7 @@ A Node.js/TypeScript backend for a collaborative chatbot editor with real-time W
 - 🔐 User authentication with JWT
 - 📊 Project management with MongoDB
 - 🔄 Real-time collaborative editing via WebSocket
-- 🤖 Chatbot interpreter with multiple block types
+- Chatbot interpreter with multiple block types
 - 🛡️ Error handling and validation
 - 🐳 Docker support
 

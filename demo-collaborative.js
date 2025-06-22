@@ -31,11 +31,11 @@ const userSockets = USERS.map((user) => {
   });
 
   socket.on('userJoined', (data) => {
-    console.log(`👋 ${user.name} sees: ${data.userId} joined the project`);
+    console.log(`${user.name} sees: ${data.userId} joined the project`);
   });
 
   socket.on('userLeft', (data) => {
-    console.log(`👋 ${user.name} sees: ${data.userId} left the project`);
+    console.log(`${user.name} sees: ${data.userId} left the project`);
   });
 
   socket.on('userDisconnected', (data) => {
