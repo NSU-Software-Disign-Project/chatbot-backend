@@ -17,6 +17,7 @@ import { createServer, Server } from 'http';
 import { WebSocketService } from './boundary/websocket/WebSocketService';
 import authRoute from './boundary/routes/authRoute';
 import userRoute from './boundary/routes/userRoute';
+import projectRoute from './boundary/routes/projectRoute';
 
 // Initialize
 dotenv.config();
@@ -29,34 +30,35 @@ const server = createServer(app);
 const socketServer = new WebSocketService(server);
 
 async function main() {
-  // Middleware
-  app.use(express.json());
-  app.use(cors({
-    origin: process.env.FRONTEND_URL || 'https://chatbot-editor.ddns.net',
-    methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
-    credentials: true
-  }));
+// Middleware
+app.use(express.json());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://chatbot-editor.ddns.net',
+  methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
+  credentials: true
+}));
 
-  // Routes
-  app.use('/api', configurationRoute);
-  app.use('/auth', authRoute);
-  app.use('/user', userRoute);
+// Routes
+app.use('/api', configurationRoute);
+app.use('/auth', authRoute);
+app.use('/user', userRoute);
+  app.use('/projects', projectRoute);
 
   // 404 Handler - must be after all routes
   app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-    res.status(404).json({ message: 'Route not found' });
-  });
+  res.status(404).json({ message: 'Route not found' });
+});
 
   // Error Handlers - must be last
   app.use(prismaErrorHandler as ErrorRequestHandler);
   app.use(serverErrorHandler as ErrorRequestHandler);
 
   // Start WebSocket Server
-  socketServer.start();
+socketServer.start();
 
   // Start HTTP Server
   const PORT = process.env.PORT || 8080;
-  server.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
   });
 }
@@ -103,6 +105,6 @@ prisma
     }
     prisma.$disconnect();
     process.exit(1);
-  });
+});
 
 export default app;

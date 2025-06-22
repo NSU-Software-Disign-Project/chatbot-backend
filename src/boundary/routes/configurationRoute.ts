@@ -1,16 +1,8 @@
 import { Router } from 'express';
-import {
-  saveProjectConfiguration,
-  getAllProjectConfigurations,
-  getProjectConfigurationByName,
-  deleteProjectConfiguration,
-} from '../../control/api/configurationController';
+// ... existing code ...
+// Удалены все project-related endpoints, теперь они в projectRoute
 
 const router = Router();
 
-router.post('/project/:name', saveProjectConfiguration);
-router.get('/projects', getAllProjectConfigurations);
-router.get('/project/:name', getProjectConfigurationByName);
-router.delete('/project/:name', deleteProjectConfiguration);
 
 export default router;

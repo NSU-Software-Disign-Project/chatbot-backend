@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import { Server as HTTPServer } from "http";
 import { ChatInterpreter } from "../../control/interpreter/ChatInterpreter";
 import { SocketIO } from "../io/SocketIO";
-import { getProjectConfiguration } from "../../control/db/databaseController";
+import { getProjectConfiguration, getProjectById } from "../../control/db/databaseController";
 import { Model } from "../../entity/BotModel";
 
 interface BotSession {
@@ -30,9 +30,14 @@ export class WebSocketService {
 
             const chat = new SocketIO(socket);
 
-            socket.on("start", async (projectName: string) => {
+            socket.on("start", async (projectId: string) => {
                 try {
-                    const model: Model = await getProjectConfiguration(projectName);
+                    const project = await getProjectById(projectId);
+                    if (!project) throw new Error('Project not found');
+                    const model: Model = {
+                        nodeDataArray: project.nodeDataArray.map((n: any) => n),
+                        linkDataArray: project.linkDataArray.map((l: any) => l),
+                    };
                     const interpreter = new ChatInterpreter(model, chat);
                     
                     const session: BotSession = {
@@ -52,13 +57,8 @@ export class WebSocketService {
                 const session = this.botSessions.get(socket.id);
                 if (session && session.isActive) {
                     try {
-                        // Обрабатываем команды
-                        if (message.startsWith('/')) {
-                            await this.handleCommand(socket.id, message, chat);
-                        } else {
-                            // Обычное сообщение - передаем в интерпретатор
-                            await this.processUserMessage(socket.id, message, chat);
-                        }
+                        // Просто передаём сообщение в интерпретатор
+                        await this.processUserMessage(socket.id, message, chat);
                     } catch (error) {
                         console.error("Ошибка при обработке сообщения:", error);
                         chat.sendError("Ошибка при обработке сообщения.");
@@ -75,43 +75,6 @@ export class WebSocketService {
                 console.error("Ошибка на сервере:", err);
             });
         });
-    }
-
-    private async handleCommand(socketId: string, command: string, chat: SocketIO): Promise<void> {
-        const session = this.botSessions.get(socketId);
-        if (!session) return;
-
-        switch (command.toLowerCase()) {
-            case '/help':
-                chat.sendMessage(`
-Доступные команды:
-/help - показать эту справку
-/restart - перезапустить бота
-/status - показать статус бота
-/stop - остановить бота
-                `);
-                break;
-
-            case '/restart':
-                if (session.interpreter) {
-                    session.interpreter.start();
-                    chat.sendMessage("Бот перезапущен!");
-                }
-                break;
-
-            case '/status':
-                const status = session.isActive ? "активен" : "неактивен";
-                chat.sendMessage(`Статус бота: ${status}`);
-                break;
-
-            case '/stop':
-                session.isActive = false;
-                chat.sendMessage("Бот остановлен. Используйте /restart для перезапуска.");
-                break;
-
-            default:
-                chat.sendMessage(`Неизвестная команда: ${command}. Используйте /help для справки.`);
-        }
     }
 
     private async processUserMessage(socketId: string, message: string, chat: SocketIO): Promise<void> {

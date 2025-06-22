@@ -51,7 +51,7 @@ export const shutdown = async (
   try {
     await Promise.race([allPromises, timeoutPromise]);
     console.log('Graceful shutdown complete.');
-    process.exit(0);
+        process.exit(0);
   } catch (error: any) {
     console.error('Error during shutdown:', error.message);
     process.exit(1);
