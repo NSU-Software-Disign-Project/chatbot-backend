@@ -1,16 +1,6 @@
 import { LinkData, Model, NodeData } from "../../entity/BotModel";
 import { IChatIO } from "../../boundary/io/IChatIO";
 
-interface LoopContext {
-  startNodeId: number;
-  endNodeId: number;
-  currentIteration: number;
-  maxIterations: number;
-  condition: string;
-  variable: string;
-  operator: string;
-  value: string | number | boolean;
-}
 
 class ChatInterpreter {
   private currentNode: NodeData | undefined = undefined;
@@ -18,8 +8,7 @@ class ChatInterpreter {
   private nodeMap: Map<number, NodeData> = new Map();
   private output: IChatIO;
   private variables: Map<string, string | number | boolean> = new Map();
-  private loopStack: LoopContext[] = [];
-  private isInLoop: boolean = false;
+  private isStopped = false;
 
   constructor(model: Model, output: IChatIO) {
     this.model = model;
@@ -38,6 +27,17 @@ class ChatInterpreter {
     operator: string,
     conditionValue: string | number | boolean
   ): boolean {
+    const isNumberOp = [">=", "<=", ">", "<", "==", "!="].includes(operator);
+    let a = variableValue;
+    let b = conditionValue;
+    if (isNumberOp && !isNaN(Number(a)) && !isNaN(Number(b))) {
+      a = Number(a);
+      b = Number(b);
+    }
+    // Убираем лишние кавычки вокруг строки
+    if (typeof b === 'string' && /^".*"$/.test(b)) {
+      b = b.slice(1, -1);
+    }
     const conditionCheckers: Record<string, (a: any, b: any) => boolean> = {
       ">=": (a, b) => a >= b,
       "<=": (a, b) => a <= b,
@@ -46,8 +46,7 @@ class ChatInterpreter {
       "==": (a, b) => a === b,
       "!=": (a, b) => a !== b,
     };
-
-    return conditionCheckers[operator]?.(variableValue, conditionValue) ?? false;
+    return conditionCheckers[operator]?.(a, b) ?? false;
   }
 
   private getLinksFromNode(nodeId: number): LinkData[] {
@@ -58,17 +57,20 @@ class ChatInterpreter {
     conditions: NodeData["conditions"],
     links: LinkData[]
   ): void {
+    // Сначала проверяем только условия, кроме default (portId === 'OUT')
     for (const condition of conditions!) {
+      if (condition.portId === 'OUT') continue; // default не проверяем
       const variableValue = this.variables.get(condition.variableName);
+      console.log(`DEBUG: variableValue =`, variableValue, typeof variableValue, '| conditionValue =', condition.conditionValue, typeof condition.conditionValue);
       const conditionMet = this.checkCondition(variableValue, condition.condition, condition.conditionValue);
 
-      console.log(`Condition: ${condition.variableName} ${condition.condition} ${condition.conditionValue} = ${conditionMet}`);
+      console.log(`Condition: ${condition.variableName} ${condition.condition} ${JSON.stringify(condition.conditionValue)} = ${conditionMet}`);
 
       if (conditionMet) {
         const nextLink = links.find((link) => link.fromPort === condition.portId);
         if (nextLink) {
           this.currentNode = this.nodeMap.get(nextLink.to);
-          this.processNode();
+          this.safeProcessNode();
           return;
         }
       }
@@ -78,7 +80,7 @@ class ChatInterpreter {
     const defaultLink = links.find((link) => link.fromPort === "OUT");
     if (defaultLink) {
       this.currentNode = this.nodeMap.get(defaultLink.to)
-      this.processNode();
+      this.safeProcessNode();
     } else {
       this.output.sendMessage("Нет связи по умолчанию из блока с условиями.");
       this.currentNode = undefined;
@@ -86,6 +88,10 @@ class ChatInterpreter {
   }
 
   private async handleOptionsBlock(choises: NodeData["choises"], links: LinkData[]): Promise<void> {
+    if (this.isStopped) {
+      console.log('ChatInterpreter: handleOptionsBlock прерван из-за остановки.');
+      return;
+    }
     if (!choises || choises.length === 0) {
       this.output.sendMessage("Нет вариантов для выбора.");
       this.currentNode = undefined;
@@ -103,7 +109,7 @@ class ChatInterpreter {
 
         if (nextLink) {
           this.currentNode = this.nodeMap.get(nextLink.to);
-          this.processNode();
+          await this.safeProcessNode();
           return;
         }
       }
@@ -115,6 +121,10 @@ class ChatInterpreter {
   }
 
   private async handleApiBlock(url: string, variableName: string): Promise<void> {
+    if (this.isStopped) {
+      console.log('ChatInterpreter: handleApiBlock прерван из-за остановки.');
+      return;
+    }
     try {
       const decodedUrl = decodeURIComponent(url);
       const response = await fetch(decodedUrl);
@@ -136,9 +146,13 @@ class ChatInterpreter {
   }
 
   private async moveToNextNode(links: LinkData[]): Promise<void> {
+    if (this.isStopped) {
+      console.log('ChatInterpreter: moveToNextNode прерван из-за остановки.');
+      return;
+    }
     if (links.length === 1) {
       this.currentNode = this.nodeMap.get(links[0].to);
-      this.processNode();
+      await this.safeProcessNode();
     } else if (links.length > 1) {
       const options = links.map((link, index) => {
         const toNode = this.nodeMap.get(link.to);
@@ -151,7 +165,7 @@ class ChatInterpreter {
 
         if (choiceIndex >= 0 && choiceIndex < links.length) {
           this.currentNode = this.nodeMap.get(links[choiceIndex].to);
-          this.processNode();
+          await this.safeProcessNode();
         } else {
           this.output.sendMessage("Неверный выбор.");
           this.currentNode = undefined;
@@ -172,127 +186,70 @@ class ChatInterpreter {
     });
   }
 
-  private checkLoopCondition(loopContext: LoopContext): boolean {
-    const variableValue = this.variables.get(loopContext.variable);
-    const conditionCheckers: Record<string, (a: any, b: any) => boolean> = {
-      ">=": (a, b) => a >= b,
-      "<=": (a, b) => a <= b,
-      ">": (a, b) => a > b,
-      "<": (a, b) => a < b,
-      "==": (a, b) => a === b,
-      "!=": (a, b) => a !== b,
-    };
-
-    const conditionMet = conditionCheckers[loopContext.operator]?.(variableValue, loopContext.value) ?? false;
-    const iterationLimitMet = loopContext.currentIteration < loopContext.maxIterations;
-
-    return conditionMet && iterationLimitMet;
-  }
-
-  private handleLoopStart(node: NodeData): void {
-    const loopContext: LoopContext = {
-      startNodeId: node.id,
-      endNodeId: -1, // Будет найдено при обработке loopEnd
-      currentIteration: 0,
-      maxIterations: node.maxIterations || 100,
-      condition: node.loopCondition || "",
-      variable: node.loopVariable || "",
-      operator: node.loopOperator || "==",
-      value: node.loopValue || ""
-    };
-
-    // Инициализируем переменную цикла если она не существует
-    if (!this.variables.has(loopContext.variable)) {
-      this.variables.set(loopContext.variable, 0);
-    }
-
-    this.loopStack.push(loopContext);
-    this.isInLoop = true;
-    this.output.sendMessage(`Начало цикла (итерация ${loopContext.currentIteration + 1}/${loopContext.maxIterations})`);
-  }
-
-  private handleLoopEnd(node: NodeData): void {
-    if (this.loopStack.length === 0) {
-      this.output.sendError("Ошибка: найден блок окончания цикла без соответствующего начала");
-      this.currentNode = undefined;
+  private async processNode(): Promise<void> {
+    if (this.isStopped) {
+      console.log('ChatInterpreter: processNode прерван из-за остановки.');
       return;
     }
-
-    const currentLoop = this.loopStack[this.loopStack.length - 1];
-    currentLoop.endNodeId = node.id;
-    currentLoop.currentIteration++;
-
-    // Увеличиваем счетчик цикла
-    const currentValue = this.variables.get(currentLoop.variable) || 0;
-    this.variables.set(currentLoop.variable, Number(currentValue) + 1);
-
-    if (this.checkLoopCondition(currentLoop)) {
-      // Продолжаем цикл - возвращаемся к началу
-      this.currentNode = this.nodeMap.get(currentLoop.startNodeId);
-      this.output.sendMessage(`Продолжение цикла (итерация ${currentLoop.currentIteration + 1}/${currentLoop.maxIterations})`);
-    } else {
-      // Выходим из цикла
-      this.loopStack.pop();
-      this.isInLoop = this.loopStack.length > 0;
-      this.output.sendMessage(`Завершение цикла после ${currentLoop.currentIteration} итераций`);
-      
-      // Переходим к следующему блоку после цикла
-      this.moveToNextNode(this.getLinksFromNode(node.id));
-    }
-  }
-
-  private async processNode(): Promise<void> {
     if (!this.currentNode) {
       this.output.sendMessage(`Ошибка: не найден блок`);
       return;
     }
+    try {
+      if (this.isStopped) {
+        console.log('ChatInterpreter: processNode прерван из-за остановки.');
+        return;
+      }
+      if (!this.currentNode) {
+        this.output.sendMessage(`Ошибка: не найден блок`);
+        return;
+      }
+      const { type, text, variableName, conditions, choises, url } = this.currentNode;
 
-    const { type, text, variableName, conditions, choises, url } = this.currentNode;
+      switch (type) {
+        case "startBlock":
+          this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
+          break;
 
-    switch (type) {
-      case "startBlock":
-        this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
-        break;
+        case "messageBlock":
+          this.output.sendMessage(this.interpolateMessage(text || ""));
+          this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
+          break;
 
-      case "messageBlock":
-        this.output.sendMessage(this.interpolateMessage(text || ""));
-        this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
-        break;
+        case "saveBlock":
+          const input = await this.output.getInput(`Введите значение для "${variableName}": `);
+          this.variables.set(variableName!, input);
+          this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
+          break;
 
-      case "saveBlock":
-        const input = await this.output.getInput(`Введите значение для "${variableName}": `);
-        this.variables.set(variableName!, input);
-        this.moveToNextNode(this.getLinksFromNode(this.currentNode!.id));
-        break;
+        case "conditionalBlock":
+          this.handleConditionalBlock(conditions || [], this.getLinksFromNode(this.currentNode.id));
+          break;
 
-      case "conditionalBlock":
-        this.handleConditionalBlock(conditions || [], this.getLinksFromNode(this.currentNode.id));
-        break;
+        case "optionsBlock":
+          this.handleOptionsBlock(choises, this.getLinksFromNode(this.currentNode.id));
+          break;
 
-      case "optionsBlock":
-        this.handleOptionsBlock(choises, this.getLinksFromNode(this.currentNode.id));
-        break;
+        case "apiBlock":
+          if (url && variableName) {
+            await this.handleApiBlock(url, variableName);
+          } else {
+            this.output.sendMessage("Ошибка: отсутствует URL или имя переменной в API блоке.");
+            this.currentNode = undefined;
+          }
+          break;
 
-      case "apiBlock":
-        if (url && variableName) {
-          await this.handleApiBlock(url, variableName);
-        } else {
-          this.output.sendMessage("Ошибка: отсутствует URL или имя переменной в API блоке.");
-          this.currentNode = undefined;
-        }
-        break;
-
-      case "loopStartBlock":
-        this.handleLoopStart(this.currentNode);
-        this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
-        break;
-
-      case "loopEndBlock":
-        this.handleLoopEnd(this.currentNode);
-        break;
-
-      default:
-        this.output.sendMessage(`Неизвестный тип блока: ${type}`);
+        default:
+          this.output.sendMessage(`Неизвестный тип блока: ${type}`);
+      }
+    } catch (err: any) {
+      if (err instanceof RangeError || (err && err.message && err.message.includes("Maximum call stack size exceeded"))) {
+        this.isStopped = true;
+        this.currentNode = undefined;
+        this.output.sendError("Обнаружен бесконечный цикл: переполнение стека. Исполнение остановлено.");
+      } else {
+        throw err;
+      }
     }
   }
 
@@ -302,11 +259,25 @@ class ChatInterpreter {
       this.output.close();
       return;
     }
-    this.processNode();
+    try {
+      this.processNode();
+    } catch (err: any) {
+      if (err instanceof RangeError || (err && err.message && err.message.includes("Maximum call stack size exceeded"))) {
+        this.isStopped = true;
+        this.currentNode = undefined;
+        this.output.sendError("Обнаружен бесконечный цикл: переполнение стека. Исполнение остановлено.");
+      } else {
+        throw err;
+      }
+    }
   }
 
   // Новый метод для обработки пользовательских сообщений в постоянном режиме
   public async handleUserMessage(message: string): Promise<void> {
+    if (this.isStopped) {
+      console.log('ChatInterpreter: handleUserMessage прерван из-за остановки.');
+      return;
+    }
     if (!this.currentNode) {
       this.output.sendMessage("Бот не активен. Используйте /restart для перезапуска.");
       return;
@@ -329,6 +300,10 @@ class ChatInterpreter {
   }
 
   private async handleUserChoice(choice: string): Promise<void> {
+    if (this.isStopped) {
+      console.log('ChatInterpreter: handleUserChoice прерван из-за остановки.');
+      return;
+    }
     if (!this.currentNode || this.currentNode.type !== "optionsBlock") return;
 
     const choices = this.currentNode.choises;
@@ -352,6 +327,26 @@ class ChatInterpreter {
     }
     
     this.output.sendMessage("Неверный выбор. Попробуйте еще раз.");
+  }
+
+  public stop() {
+    this.isStopped = true;
+    console.log('ChatInterpreter: Остановлен по запросу.');
+  }
+
+  // Безопасный вызов processNode с обработкой RangeError
+  private async safeProcessNode(): Promise<void> {
+    try {
+      await this.processNode();
+    } catch (err: any) {
+      if (err instanceof RangeError || (err && err.message && err.message.includes("Maximum call stack size exceeded"))) {
+        this.isStopped = true;
+        this.currentNode = undefined;
+        this.output.sendError("Обнаружен бесконечный цикл: переполнение стека. Исполнение остановлено.");
+      } else {
+        throw err;
+      }
+    }
   }
 }
 

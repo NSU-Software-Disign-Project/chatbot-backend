@@ -68,6 +68,11 @@ export class WebSocketService {
 
             socket.on("disconnect", () => {
                 console.log(`Клиент ${socket.id} отключился`);
+                const session = this.botSessions.get(socket.id);
+                if (session && session.interpreter && typeof session.interpreter.stop === "function") {
+                    session.interpreter.stop();
+                    console.log(`Интерпретатор для сессии ${socket.id} остановлен.`);
+                }
                 this.botSessions.delete(socket.id);
             });
 
