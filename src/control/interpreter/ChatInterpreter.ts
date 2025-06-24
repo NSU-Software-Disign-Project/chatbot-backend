@@ -297,7 +297,7 @@ class ChatInterpreter {
       await this.handleUserChoice(message);
     } else {
       // Для других блоков просто продолжаем выполнение
-      this.processNode();
+      await this.safeProcessNode();
     }
   }
 
