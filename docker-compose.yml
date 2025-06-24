@@ -43,6 +43,7 @@ services:
     environment:
       - REACT_APP_ENV=${NODE_ENV:-development}
       - REACT_APP_BACKEND_URL=${BACKEND_URL:-https://localhost}
+      - REACT_APP_YJS_WS_URL=${YJS_WS_URL:-wss://chatbot-editor.ddns.net/yjs}
     networks:
       - app-network
     restart: always
@@ -64,12 +65,10 @@ services:
   yjs-websocket:
     image: node:18-alpine
     container_name: yjs-websocket
-    command: sh -c "if [ ! -d node_modules ]; then npm install @y/websocket-server --omit=dev; fi && npx y-websocket --port 1234"
+    command: sh -c "npm install @y/websocket-server --omit=dev && npx y-websocket --port 1234"
     volumes:
       - yjs-websocket-node-modules:/app/node_modules
     working_dir: /app
-    ports:
-      - "1234:1234"
     networks:
       - app-network
     restart: unless-stopped

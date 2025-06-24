@@ -82,8 +82,10 @@ class ChatInterpreter {
       this.currentNode = this.nodeMap.get(defaultLink.to)
       this.safeProcessNode();
     } else {
-      this.output.sendMessage("Нет связи по умолчанию из блока с условиями.");
       this.currentNode = undefined;
+      if (typeof this.output.close === "function") {
+        this.output.close();
+      }
     }
   }
 
