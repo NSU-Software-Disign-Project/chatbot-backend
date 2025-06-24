@@ -105,7 +105,7 @@ export async function createProject(req: Request, res: Response) {
       ? nodeDataArray.map(jsonToNodeData)
       : [{ id: 0, type: "startBlock" }];
     const linkDataArrayDb = (linkDataArray || []).map(jsonToLinkData);
-    // Используем upsertProject для единообразия
+
     const project = await upsertProject({
       name,
       nodeDataArray: nodeDataArrayDb,
@@ -230,7 +230,7 @@ export async function updateProjectConfig(req: Request, res: Response) {
     }
     const nodeDataArrayDb = (nodeDataArray || []).map(jsonToNodeData);
     const linkDataArrayDb = (linkDataArray || []).map(jsonToLinkData);
-    // Используем upsertProject для обновления
+
     const updated = await upsertProject({
       name: name || project.name,
       nodeDataArray: nodeDataArrayDb,

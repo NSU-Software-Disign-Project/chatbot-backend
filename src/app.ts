@@ -11,8 +11,8 @@ import configurationRoute from './boundary/routes/configurationRoute';
 import {
   prismaErrorHandler,
   serverErrorHandler,
-} from './services/errorHandler';
-import { shutdown } from './services/shutDownServer';
+} from './services/handlers/errorHandler';
+import { shutdown } from './services/handlers/shutDownServer';
 import { createServer, Server } from 'http';
 import { WebSocketService } from './boundary/websocket/WebSocketService';
 import authRoute from './boundary/routes/authRoute';

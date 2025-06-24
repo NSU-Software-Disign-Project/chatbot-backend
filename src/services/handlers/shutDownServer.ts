@@ -1,4 +1,4 @@
-import { WebSocketService } from '../boundary/websocket/WebSocketService';
+import { WebSocketService } from '../../boundary/websocket/WebSocketService';
 import { Server } from 'http';
 import { PrismaClient } from '@prisma/client';
 

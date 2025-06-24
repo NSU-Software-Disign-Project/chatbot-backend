@@ -1,6 +1,6 @@
 import express from 'express';
-import { registerUser, authenticateUser } from '../../services/authentication';
-import { authenticateJWT, logoutJWT } from '../../services/jwt';
+import { registerUser, authenticateUser } from '../../services/auth/authentication';
+import { authenticateJWT, logoutJWT } from '../../services/auth/jwt';
 
 const router = express.Router();
 

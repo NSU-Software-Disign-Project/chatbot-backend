@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateJWT } from '../../services/jwt';
+import { authenticateJWT } from '../../services/auth/jwt';
 import { getProjectsForUser, getUserById, getUserByEmail } from '../../control/db/databaseController';
 
 const router = express.Router();

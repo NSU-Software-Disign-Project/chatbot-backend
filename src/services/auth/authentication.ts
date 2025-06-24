@@ -1,8 +1,8 @@
-import { prisma } from '../control/db/database';
+import { prisma } from '../../control/db/database';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { ApiError } from './ApiError';
+import { ApiError } from '../handlers/ApiError';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
