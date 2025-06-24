@@ -291,7 +291,7 @@ class ChatInterpreter {
     // Если бот ожидает ввода, обрабатываем его
     if (this.currentNode.type === "saveBlock") {
       this.variables.set(this.currentNode.variableName!, message);
-      this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
+      await this.moveToNextNode(this.getLinksFromNode(this.currentNode.id));
     } else if (this.currentNode.type === "optionsBlock") {
       // Обрабатываем выбор пользователя в options блоке
       await this.handleUserChoice(message);
