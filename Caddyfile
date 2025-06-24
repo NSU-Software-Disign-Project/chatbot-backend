@@ -5,8 +5,9 @@ chatbot-editor.ddns.net {
     reverse_proxy /projects backend:8080
     reverse_proxy /projects/* backend:8080
     reverse_proxy /socket.io/* backend:8080
-    reverse_proxy /* frontend:3000
+    reverse_proxy /yjs yjs-websocket:1234
     reverse_proxy /yjs/* yjs-websocket:1234
+    reverse_proxy /* frontend:3000
 }
 
 localhost {
@@ -17,6 +18,7 @@ localhost {
     reverse_proxy /projects backend:8080
     reverse_proxy /projects/* backend:8080
     reverse_proxy /socket.io/* backend:8080
+    reverse_proxy /yjs yjs-websocket:1234
     reverse_proxy /yjs/* yjs-websocket:1234
     reverse_proxy /* frontend:3000
 }
