@@ -30,7 +30,7 @@ services:
     container_name: backend
     environment:
       - NODE_ENV=${NODE_ENV:-development}
-      - DATABASE_URL=mongodb://mongodb:27017/expressRestDB?replicaSet=rs0&directConnection=true
+      - DATABASE_URL=mongodb://mongodb:27017/expressRestDB?replicaSet=rs0&directConnection=true&connectTimeoutMS=5000
       - FRONTEND_URL=${FRONTEND_URL:-https://localhost}
     networks:
       - app-network
@@ -43,6 +43,7 @@ services:
     environment:
       - REACT_APP_ENV=${NODE_ENV:-development}
       - REACT_APP_BACKEND_URL=${BACKEND_URL:-https://localhost}
+      - REACT_APP_YJS_WS_URL=${REACT_APP_YJS_WS_URL:-wss://chatbot-editor.ddns.net/yjs}
     networks:
       - app-network
     restart: always
@@ -50,6 +51,8 @@ services:
   mongodb:
     image: mongo:latest
     container_name: mongodb
+    ports:
+      - "27017:27017"
     volumes:
       - mongo-data:/data/db
       - mongo-config:/data/configdb
@@ -59,8 +62,22 @@ services:
       - app-network
     restart: always
 
+  yjs-websocket:
+    image: node:18-alpine
+    container_name: yjs-websocket
+    environment:
+      - HOST=0.0.0.0
+    command: sh -c "npm install @y/websocket-server --omit=dev && npx y-websocket --port 1234"
+    volumes:
+      - yjs-websocket-node-modules:/app/node_modules
+    working_dir: /app
+    networks:
+      - app-network
+    restart: always
+
 volumes:
   mongo-data:
   mongo-config:
   caddy-data:
   caddy-config:
+  yjs-websocket-node-modules:

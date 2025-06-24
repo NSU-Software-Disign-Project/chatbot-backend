@@ -5,6 +5,14 @@ interface NodeData {
   variableName?: string;
   variableValue?: string | number | boolean;
   url?: string;
+  isLoopStart?: boolean;
+  isLoopEnd?: boolean;
+  loopCondition?: string;
+  loopVariable?: string;
+  loopOperator?: string;
+  loopValue?: string | number | boolean;
+  maxIterations?: number;
+  currentIteration?: number;
   conditions?: {
     conditionId: number;
     variableName: string;
